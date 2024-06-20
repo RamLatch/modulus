@@ -110,31 +110,10 @@ class AFNO2DLayer(nn.Module):
         self.hidden_size_factor = hidden_size_factor
         self.scale = 0.02
 
-        self.w1 = nn.Parameter(
-            self.scale
-            * torch.randn(
-                2,
-                self.num_blocks,
-                self.block_size,
-                self.block_size * self.hidden_size_factor,
-            )
-        )
-        self.b1 = nn.Parameter(
-            self.scale
-            * torch.randn(2, self.num_blocks, self.block_size * self.hidden_size_factor)
-        )
-        self.w2 = nn.Parameter(
-            self.scale
-            * torch.randn(
-                2,
-                self.num_blocks,
-                self.block_size * self.hidden_size_factor,
-                self.block_size,
-            )
-        )
-        self.b2 = nn.Parameter(
-            self.scale * torch.randn(2, self.num_blocks, self.block_size)
-        )
+        self.w1 = nn.Parameter(self.scale * torch.randn(2, self.num_blocks, self.block_size, self.block_size * self.hidden_size_factor,))
+        self.b1 = nn.Parameter(self.scale * torch.randn(2, self.num_blocks, self.block_size * self.hidden_size_factor))
+        self.w2 = nn.Parameter(self.scale * torch.randn(2, self.num_blocks, self.block_size * self.hidden_size_factor, self.block_size,))
+        self.b2 = nn.Parameter(self.scale * torch.randn(2, self.num_blocks, self.block_size))
 
     def forward(self, x: Tensor) -> Tensor:
         bias = x
@@ -148,109 +127,35 @@ class AFNO2DLayer(nn.Module):
         x_real = x_real.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
         x_imag = x_imag.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
 
-        o1_real = torch.zeros(
-            [
-                B,
-                H,
-                W // 2 + 1,
-                self.num_blocks,
-                self.block_size * self.hidden_size_factor,
-            ],
-            device=x.device,
-        )
-        o1_imag = torch.zeros(
-            [
-                B,
-                H,
-                W // 2 + 1,
-                self.num_blocks,
-                self.block_size * self.hidden_size_factor,
-            ],
-            device=x.device,
-        )
+        o1_real = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
+        o1_imag = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
         o2 = torch.zeros(x_real.shape + (2,), device=x.device)
 
         total_modes = H // 2 + 1
         kept_modes = int(total_modes * self.hard_thresholding_fraction)
 
-        o1_real[
-            :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-        ] = F.relu(
-            torch.einsum(
-                "nyxbi,bio->nyxbo",
-                x_real[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w1[0],
-            )
-            - torch.einsum(
-                "nyxbi,bio->nyxbo",
-                x_imag[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w1[1],
-            )
-            + self.b1[0]
+        o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes] = F.relu(
+            torch.einsum("nyxbi,bio->nyxbo",x_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[0]) -
+            torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
+            self.b1[0]
         )
 
-        o1_imag[
-            :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-        ] = F.relu(
-            torch.einsum(
-                "nyxbi,bio->nyxbo",
-                x_imag[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w1[0],
-            )
-            + torch.einsum(
-                "nyxbi,bio->nyxbo",
-                x_real[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w1[1],
-            )
-            + self.b1[1]
+        o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes] = F.relu(
+            torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[0]) +
+            torch.einsum("nyxbi,bio->nyxbo",x_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
+            self.b1[1]
         )
 
-        o2[
-            :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 0
-        ] = (
-            torch.einsum(
-                "nyxbi,bio->nyxbo",
-                o1_real[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w2[0],
-            )
-            - torch.einsum(
-                "nyxbi,bio->nyxbo",
-                o1_imag[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w2[1],
-            )
-            + self.b2[0]
+        o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 0] = (
+            torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) -
+            torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
+            self.b2[0]
         )
 
-        o2[
-            :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 1
-        ] = (
-            torch.einsum(
-                "nyxbi,bio->nyxbo",
-                o1_imag[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w2[0],
-            )
-            + torch.einsum(
-                "nyxbi,bio->nyxbo",
-                o1_real[
-                    :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes
-                ],
-                self.w2[1],
-            )
-            + self.b2[1]
+        o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 1] = (
+            torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) +
+            torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
+            self.b2[1]
         )
 
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
