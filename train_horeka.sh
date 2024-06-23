@@ -1,6 +1,6 @@
 #!/usr/bin/env bash 
 
-#SBATCH --time=01:00:00
+#SBATCH --time=06:00:00
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
