@@ -95,14 +95,14 @@ def main(cfg: DictConfig) -> None:
     #     name="FourCastNet-Training",
     #     group="FCN-DDP-Group",
     # )
-    initialize_mlflow(
-        experiment_name="Modulus-Launch-Dev",
-        experiment_desc="Modulus launch development",
-        run_name="FCN-Training",
-        run_desc="FCN ERA5 Training",
-        user_name="Modulus User",
-        mode="offline",
-    )
+    # initialize_mlflow(
+    #     experiment_name="Modulus-Launch-Dev",
+    #     experiment_desc="Modulus launch development",
+    #     run_name="FCN-Training",
+    #     run_desc="FCN ERA5 Training",
+    #     user_name="Modulus User",
+    #     mode="offline",
+    # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
 
@@ -217,7 +217,7 @@ def main(cfg: DictConfig) -> None:
                 log.log_epoch({"Validation error": error})
 
         if world_size > 1:
-            torch.distributed.barrier()
+            comm.barrier()
 
         scheduler.step()
 
