@@ -20,8 +20,8 @@ hydra:
   run:
     dir: /hkfs/work/workspace/scratch/ie5012-MA/results/outputs/
 
-train_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/train
-validation_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/test
+train_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/wip/train
+validation_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/wip/test
 stats_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/stats
 
 ckpt_path: /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints
