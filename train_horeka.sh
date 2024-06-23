@@ -25,13 +25,14 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export NCCL_NET_GDR_LEVEL=PHB
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_NODELIST | head -n 1)
 
-SRUN_PARAMS=(
-  --mpi="pmi2"
-  --gpus-per-task=1
-  --gpu-bind="closest"
-  --label
-)
+# SRUN_PARAMS=(
+#   --mpi="pmi2"
+#   --gpus-per-task=1
+#   --gpu-bind="closest"
+#   --label
+# )
 
-source $BASE_DIR/.venvs/Modulus/bin/activate
-srun -u --mpi=pmi2 bash -c " 
-  python $TRAIN_FILE"
+# source $BASE_DIR/.venvs/Modulus/bin/activate
+# srun -u --mpi=pmi2 bash -c " 
+#   python $TRAIN_FILE"
+python $TRAIN_FILE"
