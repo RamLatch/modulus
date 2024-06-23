@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=1
 
 #SBATCH -J modulus_Test
-#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/fourcastnet/results/slurm_logs/test_modulus/slurm-%j"
+#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_modulus/slurm-%j"
 #SBATCH -p accelerated
 #SBATCH --mem=501600mb
 #SBATCH --exclusive
