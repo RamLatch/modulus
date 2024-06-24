@@ -688,7 +688,7 @@ class DistributedAFNONet(nn.Module):
         return x
 
 
-class DistributedAFNO(modulus.Module):
+class DistributedAFNOMPI(modulus.Module):
     """Distributed Adaptive Fourier neural operator (AFNO) model.
 
     Note

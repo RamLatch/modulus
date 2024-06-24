@@ -25,7 +25,7 @@ from omegaconf import DictConfig
 from mpi4py import MPI
 
 from modulus.models.afno import AFNO
-from modulus.models.afno.distributed import DistributedAFNO
+from modulus.models.afno.distributed import DistributedAFNOMPI
 from modulus.datapipes.climate import ERA5HDF5Datapipe
 from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 
@@ -139,7 +139,7 @@ def main(cfg: DictConfig) -> None:
         )
         logger.success(f"Loaded validation datapipe of size {len(validation_datapipe)}")
 
-    fcn_model = DistributedAFNO(
+    fcn_model = DistributedAFNOMPI(
         inp_shape=[720, 1440],
         in_channels=len(cfg.channels),
         out_channels=len(cfg.channels),
@@ -157,6 +157,7 @@ def main(cfg: DictConfig) -> None:
     if world_size > 1:
         ddps = torch.cuda.Stream()
         with torch.cuda.stream(ddps):
+            print("loading DDP")
             fcn_model = DistributedDataParallel(
                 fcn_model,
                 device_ids=[rank],
