@@ -177,12 +177,13 @@ def main(cfg: DictConfig) -> None:
     #     scheduler=scheduler,
     #     device=torch.device("cuda"),
     # )
+    loaded_epoch = 0
 
 #    @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
         return my_model(invar)
 
-    @StaticCaptureTraining(model=fcn_model, optim=optimizer, logger=logger)
+    #@StaticCaptureTraining(model=fcn_model, optim=optimizer, logger=logger)
     def train_step_forward(my_model, invar, outvar):
         # Multi-step prediction
         loss = 0
