@@ -178,7 +178,7 @@ def main(cfg: DictConfig) -> None:
     #     device=torch.device("cuda"),
     # )
 
-    @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
+#    @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
         return my_model(invar)
 
