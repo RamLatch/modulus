@@ -35,4 +35,4 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_NODELIST | head -n 1)
 source $BASE_DIR/.venvs/Modulus/bin/activate
 # srun -u --mpi=pmi2 bash -c " 
 #   python $TRAIN_FILE"
-srun python $TRAIN_FILE
+python $TRAIN_FILE
