@@ -25,7 +25,6 @@ from typing import Any, Callable, Dict, NewType, Optional, Union
 import torch
 
 import modulus
-from modulus.distributed import DistributedManager
 
 float16 = NewType("float16", torch.float16)
 bfloat16 = NewType("bfloat16", torch.bfloat16)
