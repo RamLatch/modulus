@@ -193,7 +193,7 @@ class _StaticCapture(object):
             if self.iteration == self.cuda_graph_warmup:
                 self.logger.warning(f"Recording graph of '{self.function.__name__}'")
                 self._zero_grads()
-                torch.cuda.synchronize()
+                torch.cuda.synchronize() 
                 # if DistributedManager().distributed:
                 #     torch.distributed.barrier()
                 #     # TODO: temporary workaround till this issue is fixed:
