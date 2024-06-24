@@ -511,10 +511,11 @@ class DistributedBlock(nn.Module):
         self.double_skip = double_skip
 
     def forward(self, x):
-        if not self.input_is_matmul_parallel:
-            scatter_shapes = compute_split_shapes(
+        scatter_shapes = compute_split_shapes(
                 x.shape[1], comm.Get_size()
             )
+        if not self.input_is_matmul_parallel:
+            
             x = scatter_to_parallel_region(x, dim=1)
 
         residual = x
