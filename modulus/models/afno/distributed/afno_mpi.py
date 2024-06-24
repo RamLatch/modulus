@@ -235,6 +235,8 @@ class DistributedPatchEmbed(nn.Module):
         matmul_comm_size = comm.Get_size()
 
         # compute parameters
+        print("inp_shape", inp_shape)
+        print("patch_size", patch_size)
         num_patches = (inp_shape[1] // patch_size[1]) * (inp_shape[0] // patch_size[0])
         self.inp_shape = (inp_shape[0], inp_shape[1])
         self.patch_size = patch_size
@@ -568,7 +570,7 @@ class DistributedAFNONet(nn.Module):
         self.input_is_matmul_parallel = input_is_matmul_parallel
         self.output_is_matmul_parallel = output_is_matmul_parallel
         norm_layer = partial(nn.LayerNorm, eps=1e-6)
-
+        print("pre patch embed", "inp_shape",inp_shape, "patch_size", patch_size)
         self.patch_embed = DistributedPatchEmbed(
             inp_shape=inp_shape,
             patch_size=self.patch_size,
