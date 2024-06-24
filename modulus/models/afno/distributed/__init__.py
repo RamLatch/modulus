@@ -14,4 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#from .afno import DistributedAFNO
+from .afno import DistributedAFNO
+from .afno_mpi import DistributedAFNOMPI
