@@ -195,12 +195,12 @@ class _StaticCapture(object):
                 self.logger.warning(f"Recording graph of '{self.function.__name__}'")
                 self._zero_grads()
                 torch.cuda.synchronize()
-                if DistributedManager().distributed:
-                    torch.distributed.barrier()
-                    # TODO: temporary workaround till this issue is fixed:
-                    # https://github.com/pytorch/pytorch/pull/104487#issuecomment-1638665876
-                    delay = os.environ.get("MODULUS_CUDA_GRAPH_CAPTURE_DELAY", "10")
-                    time.sleep(int(delay))
+                # if DistributedManager().distributed:
+                #     torch.distributed.barrier()
+                #     # TODO: temporary workaround till this issue is fixed:
+                #     # https://github.com/pytorch/pytorch/pull/104487#issuecomment-1638665876
+                #     delay = os.environ.get("MODULUS_CUDA_GRAPH_CAPTURE_DELAY", "10")
+                #     time.sleep(int(delay))
                 with torch.cuda.graph(self.graph):
                     output = self._amp_forward(*args, **kwargs)
                     self.output = output.detach()
