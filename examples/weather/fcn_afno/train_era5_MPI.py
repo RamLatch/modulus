@@ -143,7 +143,7 @@ def main(cfg: DictConfig) -> None:
         inp_shape=[720, 1440],
         in_channels=len(cfg.channels),
         out_channels=len(cfg.channels),
-        patch_size=[8, 8],
+        patch_size=8,
         embed_dim=768,
         depth=12,
         num_blocks=8,
