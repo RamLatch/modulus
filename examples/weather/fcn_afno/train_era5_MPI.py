@@ -170,14 +170,14 @@ def main(cfg: DictConfig) -> None:
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
 
     # Attempt to load latest checkpoint if one exists
-    # loaded_epoch = load_checkpoint(
-    #     to_absolute_path(cfg.ckpt_path),
-    #     models=fcn_model,
-    #     optimizer=optimizer,
-    #     scheduler=scheduler,
-    #     device=torch.device("cuda"),
-    # )
-    loaded_epoch = 0
+    loaded_epoch = load_checkpoint(
+        to_absolute_path(cfg.ckpt_path),
+        models=fcn_model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        device=torch.device("cuda"),
+    )
+    # loaded_epoch = 0
 
 #    @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
