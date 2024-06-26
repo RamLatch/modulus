@@ -42,5 +42,5 @@ num_samples_per_year_validation: 4
 num_workers_train: 8
 num_workers_validation: 8
 
-batch_size_train: 4 #2
+batch_size_train: 1 #2
 batch_size_validation: 1
