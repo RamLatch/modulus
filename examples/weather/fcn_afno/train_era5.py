@@ -31,13 +31,13 @@ from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
-try:
-    from apex import optimizers
-except:
-    raise ImportError(
-        "FCN training requires apex package for optimizer."
-        + "See https://github.com/nvidia/apex for install details."
-    )
+# try:
+#     from apex import optimizers
+# except:
+#     raise ImportError(
+#         "FCN training requires apex package for optimizer."
+#         + "See https://github.com/nvidia/apex for install details."
+#     )
 
 
 def loss_func(x, y, p=2.0):
@@ -172,9 +172,10 @@ def main(cfg: DictConfig) -> None:
         torch.cuda.current_stream().wait_stream(ddps)
 
     # Initialize optimizer and scheduler
-    optimizer = optimizers.FusedAdam(
-        fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0
-    )
+    # optimizer = optimizers.FusedAdam(
+    #     fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0
+    # )
+    optimizer = torch.optim.Adam(fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
 
     # Attempt to load latest checkpoint if one exists
