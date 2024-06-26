@@ -154,16 +154,16 @@ def main(cfg: DictConfig) -> None:
             fcn_model, log="all", log_freq=1000, log_graph=(True)
         )  # currently does not work with scripted modules. This will be fixed in the next release of W&B SDK.
     # Distributed learning
-    if world_size > 1:
-        ddps = torch.cuda.Stream()
-        with torch.cuda.stream(ddps):
-            print("loading DDP")
-            fcn_model = DistributedDataParallel(
-                fcn_model,
-                device_ids=[rank],
-                output_device=torch.device("cuda"),
-            )
-        torch.cuda.current_stream().wait_stream(ddps)
+    # if world_size > 1:
+    #     ddps = torch.cuda.Stream()
+    #     with torch.cuda.stream(ddps):
+    #         print("loading DDP")
+    #         fcn_model = DistributedDataParallel(
+    #             fcn_model,
+    #             device_ids=[rank%4],
+    #             output_device=torch.device("cuda"),
+    #         )
+    #     torch.cuda.current_stream().wait_stream(ddps)
 
     # Initialize optimizer and scheduler
     optimizer = torch.optim.Adam(fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0)
