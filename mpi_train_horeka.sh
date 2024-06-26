@@ -19,8 +19,8 @@ ml load mpi/openmpi/4.1
 
 BASE_DIR="/hkfs/work/workspace/scratch/ie5012-MA"
 TRAIN_FILE="${BASE_DIR}/modulus/examples/weather/fcn_afno/train_era5_MPI.py"
-HYDRA_FULL_ERROR=1
 
+export HYDRA_FULL_ERROR=1
 export HDF5_USE_FILE_LOCKING=FALSE
 export NCCL_NET_GDR_LEVEL=PHB
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_NODELIST | head -n 1)

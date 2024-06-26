@@ -675,7 +675,7 @@ class DistributedAFNONet(nn.Module):
             if not self.synchronized_head:
                 # If output is not model parallel, synchronize all GPUs params for head
                 for param in self.head.parameters():
-                    print(param.shape)
+                    print("param shape is", param.shape)
                     comm.Bcast(param, root=0)
                 self.synchronized_head = True
 
