@@ -667,7 +667,7 @@ class DistributedAFNONet(nn.Module):
     def forward(self, x):
         # fw pass on features
         x = self.forward_features(x)
-
+        print("params:", self.head.parameters())
         # be careful if head is distributed
         if self.output_is_matmul_parallel:
             x = copy_to_parallel_region(x)
