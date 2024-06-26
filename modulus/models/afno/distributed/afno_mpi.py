@@ -667,8 +667,6 @@ class DistributedAFNONet(nn.Module):
     def forward(self, x):
         # fw pass on features
         x = self.forward_features(x)
-        for param in self.head.parameters():
-            print("param shape is", type(param), param.size())
         # be careful if head is distributed
         if self.output_is_matmul_parallel:
             x = copy_to_parallel_region(x)
@@ -676,8 +674,10 @@ class DistributedAFNONet(nn.Module):
             if not self.synchronized_head:
                 # If output is not model parallel, synchronize all GPUs params for head
                 for param in self.head.parameters():
-                    print("param shape is", param.shape)
-                    comm.Bcast(param, root=0)
+                    param_data = param.data.cpu().numpy()
+                    comm.Bcast(param_data, root=0)
+                    if not comm.rank == 0:
+                        param.data = torch.from_numpy(param_data).to(param.device)
                 self.synchronized_head = True
 
         x = self.head(x)
