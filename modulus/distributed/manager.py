@@ -376,8 +376,8 @@ class DistributedManager(object):
         method="env",
     ):
         """Set up PyTorch distributed process group and update manager attributes"""
-        os.environ["MASTER_ADDR"] = addr
-        os.environ["MASTER_PORT"] = str(port)
+        #os.environ["MASTER_ADDR"] = addr
+        #os.environ["MASTER_PORT"] = str(port)
 
         DistributedManager._shared_state["_is_initialized"] = True
         manager = DistributedManager()
