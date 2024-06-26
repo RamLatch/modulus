@@ -23,7 +23,7 @@ TRAIN_FILE="${BASE_DIR}/modulus/examples/weather/fcn_afno/train_era5.py"
 export HYDRA_FULL_ERROR=1
 # export HDF5_USE_FILE_LOCKING=FALSE
 # export NCCL_NET_GDR_LEVEL=PHB
-#export MASTER_ADDR=$(scontrol show hostnames $SLURM_NODELIST | head -n 1)
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 
 # SRUN_PARAMS=(
 #   --mpi="pmi2"
