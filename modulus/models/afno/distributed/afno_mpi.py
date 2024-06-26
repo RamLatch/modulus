@@ -38,7 +38,8 @@ from modulus.distributed.mappings_mpi import (
     reduce_from_parallel_region,
 )
 from modulus.distributed.utils_mpi import compute_split_shapes
-
+from dataclasses import dataclass
+from modulus.models.meta import ModelMetaData
 # distributed stuff
 comm = MPI.COMM_WORLD
 
@@ -693,6 +694,22 @@ class DistributedAFNONet(nn.Module):
         return x
 
 
+@dataclass
+class MetaData(ModelMetaData):
+    name: str = "AFNOMPI"
+    # Optimization
+    jit: bool = False  # ONNX Ops Conflict
+    cuda_graphs: bool = True
+    amp: bool = True
+    # Inference
+    onnx_cpu: bool = False  # No FFT op on CPU
+    onnx_gpu: bool = True
+    onnx_runtime: bool = True
+    # Physics informed
+    var_dim: int = 1
+    func_torch: bool = False
+    auto_grad: bool = False
+
 class DistributedAFNOMPI(modulus.Module):
     """Distributed Adaptive Fourier neural operator (AFNO) model.
 
@@ -747,7 +764,7 @@ class DistributedAFNOMPI(modulus.Module):
         channel_parallel_inputs: bool = False,
         channel_parallel_outputs: bool = False,
     ) -> None:
-        super().__init__()
+        super().__init__(meta=MetaData())
 
         out_channels = out_channels or in_channels
 
