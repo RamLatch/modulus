@@ -39,8 +39,8 @@ max_epoch: 6 #80
 
 num_samples_per_year_train: 1456
 num_samples_per_year_validation: 4
-num_workers_train: 8
-num_workers_validation: 8
+num_workers_train: 1
+num_workers_validation: 1
 
 batch_size_train: 1 #2
 batch_size_validation: 1
