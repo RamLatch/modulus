@@ -16,8 +16,7 @@
 
 import logging
 from functools import partial
-from typing import Any, Tuple, Union
-from typing import Any, Dict, Union
+from typing import Any, Tuple, Union, Dict, List, Optional
 
 import math
 import warnings
@@ -49,7 +48,7 @@ from modulus.distributed.mappings_mpi import (
     scatter_to_parallel_region,
     reduce_from_parallel_region,
 )
-from modulus.distributed.utils_mpi import compute_split_shapes
+from modulus.distributed.utils_mpi import compute_split_shapes, get_memory_format
 # distributed stuff
 comm = MPI.COMM_WORLD
 

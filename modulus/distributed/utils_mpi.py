@@ -19,6 +19,7 @@ from typing import List, Optional
 
 
 from mpi4py import MPI
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -136,21 +137,31 @@ def reduce_loss(loss: float, dst_rank: int = 0, mean: bool = True):  # pragma: n
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    loss = torch.Tensor([loss]).to(device)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # loss = torch.Tensor([loss]).to(device)
 
     # For serial runs, just return the current loss!
     if size == 1:
         return float(loss)
     
-    comm.Reduce([loss, MPI.DOUBLE], None, op=MPI.SUM, root=dst_rank)
-    # Return loss if dst_rank, None otherwise
-    if mean and rank == dst_rank:
-        return float(loss.cpu() / size)
-    elif rank == dst_rank:
-        return float(loss.cpu())
+    loss_sum = comm.reduce(loss, op=MPI.SUM, root=dst_rank)
+
+    if rank == dst_rank:
+        if mean:
+            loss_sum /= size
+        return loss_sum
     else:
         return None
+    
+    #tmp_loss = torch.zeros_like(loss)
+    #comm.Reduce([loss, MPI.DOUBLE], tmp_loss, op=MPI.SUM, root=dst_rank)
+    # Return loss if dst_rank, None otherwise
+    #if mean and rank == dst_rank:
+    #    return float(tmp_loss.cpu() / size)
+    #elif rank == dst_rank:
+    #    return float(tmp_loss.cpu())
+    #else:
+    #    return None
 
 
 # distributed primitives
@@ -182,18 +193,19 @@ def _reduce(input_, use_fp32=True):  # pragma: no cover
     # Bypass the function if we are using only 1 GPU.
     if comm.Get_size() == 1:
         return input_
-
+    comm.Allreduce(MPI.IN_PLACE, input_, op=MPI.SUM)
+    return input_
     # All-reduce, use_fp32 only relevant for lower precisions
     # if input is already in double precision, nothing changes
-    if use_fp32 and (input_.dtype.itemsize < 4) and input_.dtype.is_floating_point:
-        dtype = input_.dtype
-        inputf_ = input_.float()
-        comm.Allreduce(inputf_, inputf_, op=MPI.SUM)
-        input_ = inputf_.to(dtype)
-    else:
-        comm.Allreduce(input_, input_, op=MPI.SUM)
+    # if use_fp32 and (input_.dtype.itemsize < 4) and input_.dtype.is_floating_point:
+    #     dtype = input_.dtype
+    #     inputf_ = input_.float()
+    #     comm.Allreduce(inputf_, inputf_, op=MPI.SUM)
+    #     input_ = inputf_.to(dtype)
+    # else:
+    #     comm.Allreduce(input_, input_, op=MPI.SUM)
 
-    return input_
+    # return input_
 
 
 def _split(input_, dim_):  # pragma: no cover
@@ -256,28 +268,53 @@ def all_gather_v_wrapper(
     if comm_size == 1:
         return tensor
 
-    tensor_shape = list(tensor.shape)
-    tensor_format = get_memory_format(tensor)
+    # Determine local tensor size
+    local_size = tensor.size(dim)
+    local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
 
-    if sizes is not None:
-        tensor_list = [None] * comm_size
+    if sizes is None:
+        sizes = local_sizes
 
-        for src in range(comm_size):
-            tensor_shape[dim] = sizes[src]
-            tensor_list[src] = torch.empty(
-                tensor_shape,
-                dtype=tensor.dtype,
-                device=tensor.device,
-            )
-    else:
-        # assume equal shape on all ranks
-        tensor_list = [torch.empty_like(tensor) for _ in range(comm_size)]
+    # Calculate total size for the receive buffer and displacements
+    total_size = sum(sizes)
+    displacements = [sum(sizes[:i]) for i in range(comm_size)]
 
-    comm.Allgatherv(tensor, tensor_list)
+    # Prepare the receive buffer
+    recv_buf = np.empty(total_size, dtype=tensor.numpy().dtype)
 
-    output = torch.cat(tensor_list, dim=dim).contiguous(memory_format=tensor_format)
+    # Flatten the tensor for sending
+    send_data = tensor.numpy().flatten()
 
-    return output
+    # Perform Allgatherv operation
+    comm.Allgatherv(send_data, [recv_buf, sizes, displacements, MPI.DOUBLE])
+
+    # Reconstruct the global tensor
+    # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
+    global_tensor = torch.from_numpy(recv_buf).view(-1, *tensor.size()[1:]).to(tensor.device)
+
+    return global_tensor
+    # tensor_shape = list(tensor.shape)
+    # tensor_format = get_memory_format(tensor)
+
+    # if sizes is not None:
+    #     tensor_list = [None] * comm_size
+
+    #     for src in range(comm_size):
+    #         tensor_shape[dim] = sizes[src]
+    #         tensor_list[src] = torch.empty(
+    #             tensor_shape,
+    #             dtype=tensor.dtype,
+    #             device=tensor.device,
+    #         )
+    # else:
+    #     # assume equal shape on all ranks
+    #     tensor_list = [torch.empty_like(tensor) for _ in range(comm_size)]
+
+    # comm.Allgatherv(tensor, tensor_list)
+
+    # output = torch.cat(tensor_list, dim=dim).contiguous(memory_format=tensor_format)
+
+    # return output
 
 
 def all_gather_v_bwd_wrapper(
@@ -327,33 +364,57 @@ def all_gather_v_bwd_wrapper(
     if dim >= tensor.dim():
         raise ValueError()
 
-    tensor_shape = list(tensor.shape)
-    tensor_shape[dim] = sizes[rank]
-    tmp = [
-        torch.empty(
-            tensor_shape,
-            dtype=tensor.dtype,
-            device=tensor.device,
-        )
-        for _ in range(comm_size)
-    ]
-    scatter_list = list(torch.split(tensor, sizes, dim=dim))
-    scatter_list = [t.contiguous() for t in scatter_list]
-
-    comm.Alltoallv(scatter_list, tmp)
-
-    stack_dim = tensor.dim()
-    tmp = torch.stack(tmp, dim=stack_dim)
-
-    if use_fp32 and (tmp.dtype.itemsize < 4) and tmp.dtype.is_floating_point:
-        # cast to float before sum and return float, then cast back
-        output = tmp.sum(dim=stack_dim, dtype=torch.float32)
-        output = output.to(dtype=tensor.dtype)
+    # Convert PyTorch tensor to NumPy
+    if use_fp32:
+        tensor_np = tensor.numpy().astype(np.float32)
     else:
-        # else: just do sum in native dtype
-        output = tmp.sum(dim=stack_dim)
+        tensor_np = tensor.numpy()
+
+    # Gather sizes from all ranks
+    recv_sizes = np.zeros(comm_size, dtype=int)
+    comm.Allgather(np.array([tensor_np.size], dtype=int), recv_sizes)
+
+    # Calculate displacements for each rank
+    displs = np.zeros(comm_size, dtype=int)
+    displs[1:] = np.cumsum(recv_sizes[:-1])
+
+    # Prepare receive buffer
+    recvbuf = np.empty(sum(recv_sizes), dtype=tensor_np.dtype)
+
+    # Allgather variable-sized chunks
+    comm.Allgatherv(sendbuf=tensor_np, recvbuf=(recvbuf, recv_sizes, displs), root=0)
+
+    # Convert back to PyTorch tensor and sum up the chunks
+    gathered_tensor = torch.from_numpy(recvbuf)
+    output = torch.sum(gathered_tensor, dim=dim)
 
     return output
+    # tensor_shape = list(tensor.shape)
+    # tensor_shape[dim] = sizes[rank]
+    # tmp = [
+    #     torch.empty(
+    #         tensor_shape,
+    #         dtype=tensor.dtype,
+    #         device=tensor.device,
+    #     )
+    #     for _ in range(comm_size)
+    # ]
+    # scatter_list = list(torch.split(tensor, sizes, dim=dim))
+    # scatter_list = [t.contiguous() for t in scatter_list]
+
+    # comm.Alltoallv(scatter_list, tmp)
+    # stack_dim = tensor.dim()
+    # tmp = torch.stack(tmp, dim=stack_dim)
+
+    # if use_fp32 and (tmp.dtype.itemsize < 4) and tmp.dtype.is_floating_point:
+    #     # cast to float before sum and return float, then cast back
+    #     output = tmp.sum(dim=stack_dim, dtype=torch.float32)
+    #     output = output.to(dtype=tensor.dtype)
+    # else:
+    #     # else: just do sum in native dtype
+    #     output = tmp.sum(dim=stack_dim)
+
+    # return output
 
 
 def gather_v_wrapper(
@@ -404,50 +465,79 @@ def gather_v_wrapper(
 
     if comm_size == 1:
         return tensor
+    # Ensure tensor is a numpy array for MPI operations
+    if isinstance(tensor, torch.Tensor):
+        tensor = tensor.numpy()
 
-    tensor_shape = list(tensor.shape)
-    x_recv = [None] * comm_size
-    x_send = [None] * comm_size
+    # Transpose tensor if necessary
+    if dim != 0:
+        tensor = tensor.transpose((dim,) + tuple(range(dim)) + tuple(range(dim+1, tensor.ndim)))
 
-    for r in range(comm_size):
-        if rank == dst:
-            tensor_shape[dim] = sizes[r]
-        else:
-            tensor_shape[dim] = 0
+    # Prepare sizes and displacements for Gatherv
+    sizes = np.array(sizes) * tensor.itemsize
+    displacements = np.insert(np.cumsum(sizes), 0, 0)[:-1]
 
-        x_recv[r] = torch.empty(
-            tensor_shape,
-            dtype=tensor.dtype,
-            device=tensor.device,
-        )
+    # Only the root process prepares the receive buffer
+    if rank == dst:
+        recvbuf = np.empty(sum(sizes) // tensor.itemsize, dtype=tensor.dtype)
+    else:
+        recvbuf = None
 
-        if r == dst:
-            x_send[r] = tensor
-        else:
-            tensor_shape[dim] = 0
-            x_send[r] = torch.empty(
-                tensor_shape,
-                dtype=tensor.dtype,
-                device=tensor.device,
-            )
-    comm.Gatherv(x_send[rank], x_recv, root=dst)
+    # Perform the Gatherv operation
+    comm.Gatherv(sendbuf=tensor, recvbuf=(recvbuf, sizes, displacements), root=dst)
 
-    # TODO: clean gather/scatter and some examples up
-    # main question is around whether e.g. gather returns
-    # None for rank != dst or an empty dummy or an dummy
-    # containing meta-information like dtype/etc..
-    if rank != dst:
-        for r in range(comm_size):
-            tensor_shape[dim] = sizes[r]
-            x_recv[r] = torch.empty(
-                tensor_shape,
-                dtype=tensor.dtype,
-                device=tensor.device,
-            )
+    # Convert back to torch.Tensor if necessary
+    if recvbuf is not None:
+        recvbuf = torch.from_numpy(recvbuf)
 
-    output = torch.cat(x_recv, dim=dim)
+    # Transpose back if necessary
+    if dim != 0 and recvbuf is not None:
+        recvbuf = recvbuf.transpose(0, dim)
 
-    return output
+    return recvbuf if rank == dst else None
+    # tensor_shape = list(tensor.shape)
+    # x_recv = [None] * comm_size
+    # x_send = [None] * comm_size
+
+    # for r in range(comm_size):
+    #     if rank == dst:
+    #         tensor_shape[dim] = sizes[r]
+    #     else:
+    #         tensor_shape[dim] = 0
+
+    #     x_recv[r] = torch.empty(
+    #         tensor_shape,
+    #         dtype=tensor.dtype,
+    #         device=tensor.device,
+    #     )
+
+    #     if r == dst:
+    #         x_send[r] = tensor
+    #     else:
+    #         tensor_shape[dim] = 0
+    #         x_send[r] = torch.empty(
+    #             tensor_shape,
+    #             dtype=tensor.dtype,
+    #             device=tensor.device,
+    #         )
+    # comm.Gatherv(x_send[rank], x_recv, root=dst)
+
+    # # TODO: clean gather/scatter and some examples up
+    # # main question is around whether e.g. gather returns
+    # # None for rank != dst or an empty dummy or an dummy
+    # # containing meta-information like dtype/etc..
+    # if rank != dst:
+    #     for r in range(comm_size):
+    #         tensor_shape[dim] = sizes[r]
+    #         x_recv[r] = torch.empty(
+    #             tensor_shape,
+    #             dtype=tensor.dtype,
+    #             device=tensor.device,
+    #         )
+
+    # output = torch.cat(x_recv, dim=dim)
+
+    # return output
 
 
 def scatter_v_wrapper(
@@ -492,31 +582,57 @@ def scatter_v_wrapper(
     if not (0 <= src < comm_size):
         raise ValueError()
 
-    # all_to_all is already all_to_all_v, use empty tensors to "mask"-out irrelevant parts
-    tensor_shape = list(tensor.shape)
-    x_send = [None] * comm_size
-    x_recv = [None] * comm_size
     if rank == src:
-        scatter_list = torch.split(tensor, sizes, dim=dim)
-        scatter_list = [t.contiguous() for t in scatter_list]
-        x_send = scatter_list
+        # Split the tensor using torch.split
+        chunks = torch.split(tensor, sizes, dim=dim)
+        # Convert each chunk to a NumPy array
+        np_chunks = [chunk.numpy() for chunk in chunks]
+        # Flatten and prepare the data for scattering
+        sendbuf = np.concatenate([chunk.flatten() for chunk in np_chunks])
+        sendcounts = [chunk.size for chunk in np_chunks]
+        displs = [sum(sendcounts[:i]) for i in range(comm_size)]
     else:
-        for r in range(comm_size):
-            tensor_shape[dim] = 0
-            x_send[r] = torch.empty(
-                tensor_shape, device=tensor.device, dtype=tensor.dtype
-            )
+        sendbuf = None
+        sendcounts = None
+        displs = None
 
-    for r in range(comm_size):
-        if r == src:
-            tensor_shape[dim] = sizes[rank]
-        else:
-            tensor_shape[dim] = 0
-        x_recv[r] = torch.empty(tensor_shape, device=tensor.device, dtype=tensor.dtype)
+    # Scatter the sizes first
+    recvcount = comm.scatter(sizes, root=src)
+    # Prepare a buffer to receive the scattered data
+    recvbuf = np.empty(recvcount, dtype=np.float32)  # Adjust dtype as necessary
 
-    comm.Scatterv([x_send, sizes, None, MPI.DOUBLE], x_recv, root=src)
+    # Scatter the data
+    comm.Scatterv([sendbuf, sendcounts, displs, MPI.FLOAT], recvbuf, root=src)
 
-    return x_recv[src]
+    # Convert the received numpy array back to a PyTorch tensor
+    scattered_tensor = torch.from_numpy(recvbuf)
+
+    return scattered_tensor
+    # all_to_all is already all_to_all_v, use empty tensors to "mask"-out irrelevant parts
+    # tensor_shape = list(tensor.shape)
+    # x_send = [None] * comm_size
+    # x_recv = [None] * comm_size
+    # if rank == src:
+    #     scatter_list = torch.split(tensor, sizes, dim=dim)
+    #     scatter_list = [t.contiguous() for t in scatter_list]
+    #     x_send = scatter_list
+    # else:
+    #     for r in range(comm_size):
+    #         tensor_shape[dim] = 0
+    #         x_send[r] = torch.empty(
+    #             tensor_shape, device=tensor.device, dtype=tensor.dtype
+    #         )
+
+    # for r in range(comm_size):
+    #     if r == src:
+    #         tensor_shape[dim] = sizes[rank]
+    #     else:
+    #         tensor_shape[dim] = 0
+    #     x_recv[r] = torch.empty(tensor_shape, device=tensor.device, dtype=tensor.dtype)
+
+    # comm.Scatterv([x_send, sizes, None, MPI.DOUBLE], x_recv, root=src)
+
+    # return x_recv[src]
 
 
 def indexed_all_to_all_v_wrapper(
@@ -567,25 +683,47 @@ def indexed_all_to_all_v_wrapper(
     if len(indices) != comm_size:
         raise ValueError()
 
-    x_send = [tensor[idx] for idx in indices]
-    x_recv = [None] * comm_size
-    tensor_shape = list(tensor.shape)
-    for r in range(comm_size):
-        tensor_shape[dim] = sizes[r][rank]
-        x_recv[r] = torch.empty(
-            tensor_shape,
-            dtype=tensor.dtype,
-            device=tensor.device,
-        )
+    # Flatten the tensor according to indices for sending
+    send_data = torch.cat([tensor.index_select(dim, ind) for ind in indices], dim=dim).numpy()
+    send_counts = [len(ind) for ind in indices]  # Number of elements to send to each rank
+    sdispls = np.insert(np.cumsum(send_counts), 0, 0)[:-1]  # Displacements for sending
 
-    sendbuf = [x_send[r].numpy() for r in range(comm_size)]
-    recvbuf = [x_recv[r].numpy() for r in range(comm_size)]
+    # Prepare receive counts and displacements
+    recv_counts = [sizes[i][rank] for i in range(comm_size)]
+    rdispls = np.insert(np.cumsum(recv_counts), 0, 0)[:-1]  # Displacements for receiving
 
-    comm.Alltoallv(sendbuf, sizes[rank], recvbuf)
+    # Prepare receive buffer
+    total_recv_elements = sum(recv_counts)
+    recv_data = np.empty(total_recv_elements, dtype=send_data.dtype)
 
-    tensor_to_recv = torch.cat([torch.from_numpy(recvbuf[r]) for r in range(comm_size)], dim=dim)
+    # Perform Alltoallv operation
+    comm.Alltoallv([send_data, send_counts, sdispls, MPI.DOUBLE],
+                   [recv_data, recv_counts, rdispls, MPI.DOUBLE])
 
-    return tensor_to_recv
+    # Reconstruct the received tensor
+    # Assuming the received data is 1D for simplicity. Adjust for actual dimensions.
+    recv_tensor = torch.from_numpy(recv_data).to(tensor.device)
+
+    return recv_tensor
+    # x_send = [tensor[idx] for idx in indices]
+    # x_recv = [None] * comm_size
+    # tensor_shape = list(tensor.shape)
+    # for r in range(comm_size):
+    #     tensor_shape[dim] = sizes[r][rank]
+    #     x_recv[r] = torch.empty(
+    #         tensor_shape,
+    #         dtype=tensor.dtype,
+    #         device=tensor.device,
+    #     )
+
+    # sendbuf = [x_send[r].numpy() for r in range(comm_size)]
+    # recvbuf = [x_recv[r].numpy() for r in range(comm_size)]
+
+    # comm.Alltoallv(sendbuf, sizes[rank], recvbuf)
+
+    # tensor_to_recv = torch.cat([torch.from_numpy(recvbuf[r]) for r in range(comm_size)], dim=dim)
+
+    # return tensor_to_recv
 
 
 def indexed_all_to_all_v_wrapper_bwd(
@@ -639,44 +777,74 @@ def indexed_all_to_all_v_wrapper_bwd(
     if len(indices) != comm_size:
         raise ValueError()
 
-    tensor_shape = list(tensor.shape)
+    # Convert tensor to appropriate dtype
+    if use_fp32 and tensor.dtype != torch.float32:
+        tensor = tensor.float()
 
-    # scatter gradients, roles reversed compared to forward pass
-    # recv_sizes in forward pass
-    recv_sizes = [sizes[i][rank] for i in range(comm_size)]
-    # send_sizes in forward pass
-    send_sizes = [sizes[rank][i] for i in range(comm_size)]
+    # Flatten the tensor according to indices for sending
+    send_data = torch.cat([tensor.index_select(dim, ind) for ind in indices], dim=dim).numpy()
+    send_counts = [len(ind) for ind in indices]  # Number of elements to send to each rank
+    sdispls = np.insert(np.cumsum(send_counts), 0, 0)[:-1]  # Displacements for sending
 
-    x_send = [None] * comm_size
-    x_recv = [None] * comm_size
+    # Prepare receive counts and displacements based on sizes from the forward pass
+    recv_counts = [sizes[i][rank] for i in range(comm_size)]
+    rdispls = np.insert(np.cumsum(recv_counts), 0, 0)[:-1]  # Displacements for receiving
 
-    for r in range(comm_size):
-        if rank == r:
-            x_send[r] = tensor
-        else:
-            x_send[r] = torch.empty(tensor_shape, dtype=tensor.dtype, device=tensor.device)
+    # Prepare receive buffer
+    total_recv_elements = sum(recv_counts)
+    recv_data = np.empty(total_recv_elements, dtype=send_data.dtype)
 
-    comm.Scatterv([x_send, send_sizes, None, MPI.DOUBLE], x_recv, root=rank)
+    # Perform Alltoallv operation
+    comm.Alltoallv([send_data, send_counts, sdispls, MPI.DOUBLE],
+                   [recv_data, recv_counts, rdispls, MPI.DOUBLE])
 
-    tensor_to_recv = torch.cat(x_recv, dim=dim)
+    # Reconstruct the received gradient tensor
+    # Assuming the received data is 1D for simplicity. Adjust for actual dimensions.
+    recv_tensor = torch.from_numpy(recv_data).to(tensor.device)
 
-    # sum up gathered gradients and taking
-    # care of precision handling as specified
-    # by boolean flag
-    indices = torch.cat(indices, dim=0)
-    tensor_shape[dim] = tensor_size_along_dim
-    if use_fp32 and (tensor.dtype.itemsize < 4) and tensor.dtype.is_floating_point:
-        out = torch.zeros(tensor_shape, dtype=torch.float32, device=tensor.device)
-        tensor_to_recv = tensor_to_recv.to(dtype=torch.float32)
-    else:
-        out = torch.zeros(tensor_shape, dtype=tensor.dtype, device=tensor.device)
+    # Convert back to original dtype if necessary
+    if use_fp32 and tensor.dtype != torch.float32:
+        recv_tensor = recv_tensor.to(tensor.dtype)
 
-    out.index_add_(source=tensor_to_recv, index=indices, dim=dim)
+    return recv_tensor
+    # tensor_shape = list(tensor.shape)
 
-    if out.dtype != tensor.dtype:
-        out = out.to(tensor.dtype)
+    # # scatter gradients, roles reversed compared to forward pass
+    # # recv_sizes in forward pass
+    # recv_sizes = [sizes[i][rank] for i in range(comm_size)]
+    # # send_sizes in forward pass
+    # send_sizes = [sizes[rank][i] for i in range(comm_size)]
 
-    return out
+    # x_send = [None] * comm_size
+    # x_recv = [None] * comm_size
+
+    # for r in range(comm_size):
+    #     if rank == r:
+    #         x_send[r] = tensor
+    #     else:
+    #         x_send[r] = torch.empty(tensor_shape, dtype=tensor.dtype, device=tensor.device)
+
+    # comm.Scatterv([x_send, send_sizes, None, MPI.DOUBLE], x_recv, root=rank)
+
+    # tensor_to_recv = torch.cat(x_recv, dim=dim)
+
+    # # sum up gathered gradients and taking
+    # # care of precision handling as specified
+    # # by boolean flag
+    # indices = torch.cat(indices, dim=0)
+    # tensor_shape[dim] = tensor_size_along_dim
+    # if use_fp32 and (tensor.dtype.itemsize < 4) and tensor.dtype.is_floating_point:
+    #     out = torch.zeros(tensor_shape, dtype=torch.float32, device=tensor.device)
+    #     tensor_to_recv = tensor_to_recv.to(dtype=torch.float32)
+    # else:
+    #     out = torch.zeros(tensor_shape, dtype=tensor.dtype, device=tensor.device)
+
+    # out.index_add_(source=tensor_to_recv, index=indices, dim=dim)
+
+    # if out.dtype != tensor.dtype:
+    #     out = out.to(tensor.dtype)
+
+    # return out
 
 
 def mark_module_as_shared(
