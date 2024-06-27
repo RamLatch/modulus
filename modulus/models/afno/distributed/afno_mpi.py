@@ -25,6 +25,7 @@ if REPLICATE:
 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+    torch.set_printoptions(threshold=10_000)
 
 import logging
 from functools import partial
@@ -33,7 +34,6 @@ from typing import Any, Tuple, Union
 import math
 import warnings
 import torch
-import logging
 
 import torch.nn.functional as F
 from dataclasses import dataclass
@@ -129,7 +129,9 @@ def drop_path(
     Opted for changing the layer and argument names to 'drop path' rather than mix
     DropConnect as a layer name and use 'survival rate' as the argument.
     """
-    print("drop_path x:",x)
+    if REPLICATE:
+        try:    print("drop_path x:",x.detach().cpu().numpy())
+        except: print("drop_path x:",x)
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1.0 - drop_prob
@@ -139,7 +141,9 @@ def drop_path(
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
     output = x.div(keep_prob) * random_tensor
-    print("drop_path output:",output)
+    if REPLICATE:
+        try:    print("drop_path output:",output.detach().cpu().numpy())
+        except: print("drop_path output:",output)
     return output
 
 class DropPath(nn.Module):
@@ -208,34 +212,56 @@ class DistributedMLP(nn.Module):
 
     def forward(self, x):
         # gather if input is MP
-        print("DistributedMLP x:",x)
+        if REPLICATE:
+            try:   print("DistributedMLP x:",x.detach().cpu().numpy())
+            except:print("DistributedMLP x:",x)
         if self.input_is_matmul_parallel:
             x = gather_from_parallel_region(
                 x, dim=1, shapes=self.gather_shapes
             )
-            print("DistributedMLP x after gather if inputMatMulParallel:",x)
+            if REPLICATE:
+                try:    print("DistributedMLP x after gather if inputMatMulParallel:",x.detach().cpu().numpy())
+                except: print("DistributedMLP x after gather if inputMatMulParallel:",x)
 
         x = copy_to_parallel_region(x)
-        print("DistributedMLP x after copy_to_parallel_region:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP x after copy_to_parallel_region:",x.detach().cpu().numpy())
+            except: print("DistributedMLP x after copy_to_parallel_region:",x)
         x = F.conv2d(x, self.w1, bias=self.b1)
-        print("DistributedMLP conf2d:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
+            except: print("DistributedMLP conf2d:",x)
         x = self.act(x)
-        print("DistributedMLP act:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP act:",x.detach().cpu().numpy())
+            except: print("DistributedMLP act:",x)
         x = self.drop(x)
-        print("DistributedMLP drop:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
+            except: print("DistributedMLP drop:",x)
         x = F.conv2d(x, self.w2, bias=None)
-        print("DistributedMLP conf2d:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
+            except: print("DistributedMLP conf2d:",x)
         x = reduce_from_parallel_region(x)
-        print("DistributedMLP x after reduce_from_parallel_region:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP x after reduce_from_parallel_region:",x.detach().cpu().numpy())
+            except: print("DistributedMLP x after reduce_from_parallel_region:",x)
         x = x + torch.reshape(self.b2, (1, -1, 1, 1))
-        print("DistributedMLP x after reshape:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP x after reshape:",x.detach().cpu().numpy())
+            except: print("DistributedMLP x after reshape:",x)
         x = self.drop(x)
-        print("DistributedMLP drop:",x)
+        if REPLICATE:
+            try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
+            except: print("DistributedMLP drop:",x)
 
         # scatter if output is MP
         if self.output_is_matmul_parallel:
             x = scatter_to_parallel_region(x, dim=1)
-            print("DistributedMLP x after scatter if outMatMul:",x)
+            if REPLICATE:
+                try:    print("DistributedMLP x after scatter if outMatMul:",x.detach().cpu().numpy())
+                except: print("DistributedMLP x after scatter if outMatMul:",x)
 
         return x
 
@@ -260,8 +286,8 @@ class DistributedPatchEmbed(nn.Module):
         matmul_comm_size = comm.Get_size()
 
         # compute parameters
-        #print("inp_shape", inp_shape)
-        #print("patch_size", patch_size)
+        # print("inp_shape", inp_shape.detach().cpu().numpy())
+        # print("patch_size", patch_size.detach().cpu().numpy())
         num_patches = (inp_shape[1] // patch_size[1]) * (inp_shape[0] // patch_size[0])
         self.inp_shape = (inp_shape[0], inp_shape[1])
         self.patch_size = patch_size
@@ -296,16 +322,22 @@ class DistributedPatchEmbed(nn.Module):
         self.proj.bias.is_shared_spatial = True
 
     def forward(self, x):
-        print("DistributedPatchEmbed x:",x)
+        if REPLICATE:
+            try:    print("DistributedPatchEmbed x:",x.detach().cpu().numpy())
+            except: print("DistributedPatchEmbed x:",x)
         if self.input_parallel:
             x = gather_from_parallel_region(
                 x, dim=1, shapes=self.in_shapes
             )
-            print("DistributedPatchEmbed x after gather if input_parallel:",x)
+            if REPLICATE:
+                try:    print("DistributedPatchEmbed x after gather if input_parallel:",x.detach().cpu().numpy())
+                except: print("DistributedPatchEmbed x after gather if input_parallel:",x)
 
         if self.output_parallel:
             x = copy_to_parallel_region(x)
-            print("DistributedPatchEmbed x after copy_to_parallel_region:",x)
+            if REPLICATE:
+                try:    print("DistributedPatchEmbed x after copy_to_parallel_region:",x.detach().cpu().numpy())
+                except: print("DistributedPatchEmbed x after copy_to_parallel_region:",x)
 
         B, C, H, W = x.shape
         if not (H == self.inp_shape[0] and W == self.inp_shape[1]):
@@ -314,7 +346,9 @@ class DistributedPatchEmbed(nn.Module):
             )
         # new: B, C, H*W
         x = self.proj(x).flatten(2)
-        print("DistributedPatchEmbed return:",x)
+        if REPLICATE:
+            try:    print("DistributedPatchEmbed return:",x.detach().cpu().numpy())
+            except: print("DistributedPatchEmbed return:",x)
         return x
 
 
@@ -429,27 +463,37 @@ class DistributedAFNO2D(nn.Module):
         self.b2.is_shared_spatial = True
 
     def forward(self, x):
-        print("DistributedAFNO2D x:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x:",x)
         if not self.input_is_matmul_parallel:
             # distribute data
             num_chans = x.shape[1]
             x = scatter_to_parallel_region(x, dim=1)
-            print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x)
+            if REPLICATE:
+                try:    print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
+                except: print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x)
 
         # bias
         bias = x
 
         dtype = x.dtype
         x = x.float()
-        print("DistributedAFNO2D x after float:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after float:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after float:",x)
         B, C, H, W = x.shape
         total_modes = H // 2 + 1
         kept_modes = int(total_modes * self.hard_thresholding_fraction)
 
         x = self.fft_handle(x, (H, W), (-2, -1), "ortho")
-        print("DistributedAFNO2D x after fft_handle:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after fft_handle:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after fft_handle:",x)
         x = x.view(B, self.num_blocks_local, self.block_size, H, W // 2 + 1)
-        print("DistributedAFNO2D x after view:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after view:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after view:",x)
 
         # new
         x = torch.view_as_real(x)
@@ -470,20 +514,30 @@ class DistributedAFNO2D(nn.Module):
                 self.b1,
             )
         )
-        print("DistributedAFNO2D o1:",o1)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D o1:",o1.detach().cpu().numpy())
+            except: print("DistributedAFNO2D o1:",o1)
         o2[
             :, :, :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, :
         ] = self.mult_handle(o1, self.w2, self.b2)
-        print("DistributedAFNO2D o2:",o2)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D o2:",o2.detach().cpu().numpy())
+            except: print("DistributedAFNO2D o2:",o2)
         # finalize
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
         x = torch.view_as_complex(x)
-        print("DistributedAFNO2D x after softshrink:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after softshrink:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after softshrink:",x)
         x = x.reshape(B, C, H, W // 2 + 1)
         x = self.ifft_handle(x, (H, W), (-2, -1), "ortho")
-        print("DistributedAFNO2D x after ifft_handle:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after ifft_handle:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after ifft_handle:",x)
         x = x.type(dtype) + bias
-        print("DistributedAFNO2D x after type:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D x after type:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D x after type:",x)
 
         # gather
         if not self.output_is_matmul_parallel:
@@ -493,8 +547,12 @@ class DistributedAFNO2D(nn.Module):
             x = gather_from_parallel_region(
                 x, dim=1, shapes=gather_shapes
             )
-            print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x)
-        print("DistributedAFNO2D return:",x)
+            if REPLICATE:
+                try:    print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
+                except: print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNO2D return:",x.detach().cpu().numpy())
+            except: print("DistributedAFNO2D return:",x)
         return x
 
 class DistributedBlock(nn.Module):
@@ -551,40 +609,60 @@ class DistributedBlock(nn.Module):
         self.double_skip = double_skip
 
     def forward(self, x):
-        print(f"DistributedBlock {BLOCK_DEBUG} x:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} x:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} x:",x)
         scatter_shapes = compute_split_shapes(
                 x.shape[1], comm.Get_size()
             )
         if not self.input_is_matmul_parallel:
             
             x = scatter_to_parallel_region(x, dim=1)
-            print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x)
+            if REPLICATE:
+                try:    print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
+                except: print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x)
 
         residual = x
         x = self.norm1(x)
-        print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x)
         x = self.filter(x)
-        print(f"DistributedBlock {BLOCK_DEBUG} filter:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} filter:",x)
 
         if self.double_skip:
             x = x + residual
             residual = x
-            print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x)
+            if REPLICATE:
+                try:    print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x.detach().cpu().numpy())
+                except: print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x)
 
         x = self.norm2(x)
-        print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x)
         x = self.mlp(x)
-        print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x)
         x = self.drop_path(x)
-        print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x)
         x = x + residual
-        print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x)
+        if REPLICATE:
+            try:    print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x.detach().cpu().numpy())
+            except: print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x)
 
         if not self.output_is_matmul_parallel:
             x = gather_from_parallel_region(
                 x, dim=1, shapes=scatter_shapes
             )
-            print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x)
+            if REPLICATE:
+                try:    print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
+                except: print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x)
 
         return x
 
@@ -621,7 +699,7 @@ class DistributedAFNONet(nn.Module):
         self.input_is_matmul_parallel = input_is_matmul_parallel
         self.output_is_matmul_parallel = output_is_matmul_parallel
         norm_layer = partial(nn.LayerNorm, eps=1e-6)
-        #print("pre patch embed", "inp_shape",inp_shape, "patch_size", patch_size)
+        # print("pre patch embed", "inp_shape",inp_shape, "patch_size", patch_size.detach().cpu().numpy())
         self.patch_embed = DistributedPatchEmbed(
             inp_shape=inp_shape,
             patch_size=self.patch_size,
@@ -701,34 +779,50 @@ class DistributedAFNONet(nn.Module):
 
     def forward_features(self, x):
         global BLOCK_DEBUG
-        print("DistributedAFNONet forward_features x:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet forward_features x:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet forward_features x:",x)
         B = x.shape[0]
 
         x = self.patch_embed(x)
-        print("DistributedAFNONet patch_embed:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet patch_embed:",x)
         x = x + self.pos_embed
-        print("DistributedAFNONet pos_embed:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet pos_embed:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet pos_embed:",x)
         x = self.pos_drop(x)
-        print("DistributedAFNONet pos_drop:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet pos_drop:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet pos_drop:",x)
 
         # reshape
         x = x.reshape(B, self.embed_dim_local, self.h, self.w)
-        print("DistributedAFNONet x after reshape:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet x after reshape:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet x after reshape:",x)
 
         for blk in self.blocks:
             x = blk(x)
             BLOCK_DEBUG += 1
-        print("DistributedAFNONet forward_features return x:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet forward_features return x:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet forward_features return x:",x)
         return x
 
     def forward(self, x):
-        print("DistributedAFNONet x:",x)
-        # fw pass on features
+        if REPLICATE:
+            try:    print("DistributedAFNONet x:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet x:",x)
+        # fw pass 
         x = self.forward_features(x)
         # be careful if head is distributed
         if self.output_is_matmul_parallel:
             x = copy_to_parallel_region(x)
-            print("DistributedAFNONet x after copy_to if outMatMul:",x)
+            if REPLICATE:
+                try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
+                except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
         else:
             if not self.synchronized_head:
                 # If output is not model parallel, synchronize all GPUs params for head
@@ -739,7 +833,9 @@ class DistributedAFNONet(nn.Module):
                 self.synchronized_head = True
 
         x = self.head(x)
-        print("DistributedAFNONet head:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet head:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet head:",x)
 
         # new: B, C, H, W
         b = x.shape[0]
@@ -748,7 +844,9 @@ class DistributedAFNONet(nn.Module):
         x = xvt.view(
             b, -1, (self.h * self.patch_size[0]), (self.w * self.patch_size[1])
         )
-        print("DistributedAFNONet return:",x)
+        if REPLICATE:
+            try:    print("DistributedAFNONet return:",x.detach().cpu().numpy())
+            except: print("DistributedAFNONet return:",x)
 
         return x
 

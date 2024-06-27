@@ -25,6 +25,8 @@ if REPLICATE:
 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+    torch.set_printoptions(threshold=10_000)
+
 
 from dataclasses import dataclass
 from functools import partial
@@ -42,6 +44,7 @@ from ..module import Module
 
 Tensor = torch.Tensor
 BLOCK_DEBUG = 0
+
 
 class AFNOMlp(nn.Module):
     """Fully-connected Multi-layer perception used inside AFNO
@@ -75,17 +78,29 @@ class AFNOMlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x: Tensor) -> Tensor:
-        print("AFNOMlp x:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp x:",x.detach().cpu().numpy())
+            except: print("AFNOMlp x:",x)
         x = self.fc1(x)
-        print("AFNOMlp fc1:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp fc1:",x.detach().cpu().numpy())
+            except: print("AFNOMlp fc1:",x)
         x = self.act(x)
-        print("AFNOMlp act:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp act:",x.detach().cpu().numpy())
+            except: print("AFNOMlp act:",x)
         x = self.drop(x)
-        print("AFNOMlp drop:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp drop:",x.detach().cpu().numpy())
+            except: print("AFNOMlp drop:",x)
         x = self.fc2(x)
-        print("AFNOMlp fc2:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp fc2:",x.detach().cpu().numpy())
+            except: print("AFNOMlp fc2:",x)
         x = self.drop(x)
-        print("AFNOMlp return:",x)
+        if REPLICATE:
+            try:    print("AFNOMlp return:",x.detach().cpu().numpy())
+            except: print("AFNOMlp return:",x)
         return x
 
 
@@ -137,16 +152,24 @@ class AFNO2DLayer(nn.Module):
         bias = x
         dtype = x.dtype
         x = x.float()
-        print("AFNO2DLayer x:",x)
+        if REPLICATE:
+            try:    print("AFNO2DLayer x:",x.detach().cpu().numpy())
+            except: print("AFNO2DLayer x:",x)
         B, H, W, C = x.shape
         # Using ONNX friendly FFT functions
         x = fft.rfft2(x, dim=(1, 2), norm="ortho")
-        print("AFNO2DLayer rfft2:",x)
+        if REPLICATE:
+            try:    print("AFNO2DLayer rfft2:",x.detach().cpu().numpy())
+            except: print("AFNO2DLayer rfft2:",x)
         x_real, x_imag = fft.real(x), fft.imag(x)
         x_real = x_real.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
         x_imag = x_imag.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
-        print("AFNO2DLayer x_real:",x_real)
-        print("AFNO2DLayer x_imag:",x_imag)
+        if REPLICATE:
+            try:    print("AFNO2DLayer x_real:",x_real.detach().cpu().numpy())
+            except: print("AFNO2DLayer x_real:",x_real)
+        if REPLICATE:
+            try:    print("AFNO2DLayer x_imag:",x_imag.detach().cpu().numpy())
+            except: print("AFNO2DLayer x_imag:",x_imag)
 
         o1_real = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
         o1_imag = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
@@ -160,28 +183,38 @@ class AFNO2DLayer(nn.Module):
             torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
             self.b1[0]
         )
-        print("AFNO2DLayer o1_real:",o1_real)
+        if REPLICATE:
+            try:    print("AFNO2DLayer o1_real:",o1_real.detach().cpu().numpy())
+            except: print("AFNO2DLayer o1_real:",o1_real)
         o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes] = F.relu(
             torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[0]) +
             torch.einsum("nyxbi,bio->nyxbo",x_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
             self.b1[1]
         )
-        print("AFNO2DLayer o1_imag:",o1_imag)
+        if REPLICATE:
+            try:    print("AFNO2DLayer o1_imag:",o1_imag.detach().cpu().numpy())
+            except: print("AFNO2DLayer o1_imag:",o1_imag)
         o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 0] = (
             torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) -
             torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
             self.b2[0]
         )
-        print("AFNO2DLayer o2_real:",o2[..., 0])
+        if REPLICATE:
+            try:    print("AFNO2DLayer o2_real:",o2[..., 0].detach().cpu().numpy())
+            except: print("AFNO2DLayer o2_real:",o2[..., 0])
         o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 1] = (
             torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) +
             torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
             self.b2[1]
         )
-        print("AFNO2DLayer o2_imag:",o2[..., 1])
+        if REPLICATE:
+            try:    print("AFNO2DLayer o2_imag:",o2[..., 1].detach().cpu().numpy())
+            except: print("AFNO2DLayer o2_imag:",o2[..., 1])
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
         x = fft.view_as_complex(x)
-        print("AFNO2DLayer x_complex:",x)
+        if REPLICATE:
+            try:    print("AFNO2DLayer x_complex:",x.detach().cpu().numpy())
+            except: print("AFNO2DLayer x_complex:",x)
         # TODO(akamenev): replace the following branching with
         # a one-liner, something like x.reshape(..., -1).squeeze(-1),
         # but this currently fails during ONNX export.
@@ -191,9 +224,13 @@ class AFNO2DLayer(nn.Module):
             x = x.reshape(B, H, W // 2 + 1, C)
         # Using ONNX friendly FFT functions
         x = fft.irfft2(x, s=(H, W), dim=(1, 2), norm="ortho")
-        print("AFNO2DLayer irfft2:",x)
+        if REPLICATE:
+            try:    print("AFNO2DLayer irfft2:",x.detach().cpu().numpy())
+            except: print("AFNO2DLayer irfft2:",x)
         x = x.type(dtype)
-        print("AFNO2DLayer return:",x+bias)
+        if REPLICATE:
+            try:    print("AFNO2DLayer return:",x+bias.detach().cpu().numpy())
+            except: print("AFNO2DLayer return:",x+bias)
         return x + bias
 
 
@@ -253,23 +290,37 @@ class Block(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         residual = x
-        print(f"Block {BLOCK_DEBUG} residual:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} residual:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} residual:",x)
         x = self.norm1(x)
-        print(f"Block {BLOCK_DEBUG} norm1:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} norm1:",x)
         x = self.filter(x)
-        print(f"Block {BLOCK_DEBUG} filter:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} filter:",x)
 
         if self.double_skip:
             x = x + residual
             residual = x
-            print(f"Block {BLOCK_DEBUG} double skip:",x)
+            if REPLICATE:
+                try:    print(f"Block {BLOCK_DEBUG} double skip:",x.detach().cpu().numpy())
+                except: print(f"Block {BLOCK_DEBUG} double skip:",x)
 
         x = self.norm2(x)
-        print(f"Block {BLOCK_DEBUG} norm2:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} norm2:",x)
         x = self.mlp(x)
-        print(f"Block {BLOCK_DEBUG} mlp:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} mlp:",x)
         x = x + residual
-        print(f"Block {BLOCK_DEBUG} return:",x)
+        if REPLICATE:
+            try:    print(f"Block {BLOCK_DEBUG} return:",x.detach().cpu().numpy())
+            except: print(f"Block {BLOCK_DEBUG} return:",x)
         return x
 
 
@@ -313,13 +364,17 @@ class PatchEmbed(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         B, C, H, W = x.shape
-        print("PatchEmbed x:",x)
+        if REPLICATE:
+            try:    print("PatchEmbed x:",x.detach().cpu().numpy())
+            except: print("PatchEmbed x:",x)
         if not (H == self.inp_shape[0] and W == self.inp_shape[1]):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
         x = self.proj(x).flatten(2).transpose(1, 2)
-        print("PatchEmbed return:",x)
+        if REPLICATE:
+            try:    print("PatchEmbed return:",x.detach().cpu().numpy())
+            except: print("PatchEmbed return:",x)
         return x
 
 
@@ -487,26 +542,42 @@ class AFNO(Module):
         """Forward pass of core AFNO"""
         B = x.shape[0]
         x = self.patch_embed(x)
-        print("Afno patch embed:",x)
+        if REPLICATE:
+            try:    print("Afno patch embed:",x.detach().cpu().numpy())
+            except: print("Afno patch embed:",x)
         x = x + self.pos_embed
-        print("Afno pos embed:",x)
+        if REPLICATE:
+            try:    print("Afno pos embed:",x.detach().cpu().numpy())
+            except: print("Afno pos embed:",x)
         x = self.pos_drop(x)
-        print("Afno pos drop:",x)
+        if REPLICATE:
+            try:    print("Afno pos drop:",x.detach().cpu().numpy())
+            except: print("Afno pos drop:",x)
 
         x = x.reshape(B, self.h, self.w, self.embed_dim)
-        print("Afno reshape:",x)
+        if REPLICATE:
+            try:    print("Afno reshape:",x.detach().cpu().numpy())
+            except: print("Afno reshape:",x)
         for blk in self.blocks:
             x = blk(x)
             BLOCK_DEBUG += 1
-        print("Afno return:",x)
+        if REPLICATE:
+            try:    print("Afno return:",x.detach().cpu().numpy())
+            except: print("Afno return:",x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:
-        print("Afno forward:",x)
+        if REPLICATE:
+            try:    print("Afno forward:",x.detach().cpu().numpy())
+            except: print("Afno forward:",x)
         x = self.forward_features(x)
-        print("Afno forward features:",x)
+        if REPLICATE:
+            try:    print("Afno forward features:",x.detach().cpu().numpy())
+            except: print("Afno forward features:",x)
         x = self.head(x)
-        print("Afno head:",x)
+        if REPLICATE:
+            try:    print("Afno head:",x.detach().cpu().numpy())
+            except: print("Afno head:",x)
         # Correct tensor shape back into [B, C, H, W]
         # [b h w (p1 p2 c_out)]
         out = x.view(list(x.shape[:-1]) + [self.patch_size[0], self.patch_size[1], -1])
