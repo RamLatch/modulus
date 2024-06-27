@@ -13,6 +13,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+REPLICATE = True
+if REPLICATE:
+    import random
+    import numpy as np
+    import torch
+
+    random.seed(42)
+    np.random.seed(42)
+    torch.manual_seed(42)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 import torch
 import hydra
