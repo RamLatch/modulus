@@ -4,7 +4,7 @@
 #SBATCH --partition=dev_cpuonly                 # queue for resource allocation
 #SBATCH --nodes=1                          # number of nodes to be used
 #SBATCH --time=2:00:00                      # wall-clock time limit
-#SBATCH --mem=400000                        # memory
+#SBATCH --mem=243200                        # memory
 #SBATCH --ntasks-per-node=1                # maximum count of tasks per node
 #SBATCH --cpus-per-task=152
 #SBATCH --mail-type=ALL                    # Notify user by email when certain event types occur.
