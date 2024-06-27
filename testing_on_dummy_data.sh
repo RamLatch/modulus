@@ -2,6 +2,7 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
+#SBATCH -t 00:01:00
 
 #SBATCH -J DummyTest
 #SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/slurm-%j"
