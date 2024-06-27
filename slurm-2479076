@@ -1,0 +1,179 @@
+[15:59:52 - launch - WARNING] MLFlow not initialized, turning off
+[15:59:52 - main - INFO] Loaded datapipe of size 10192
+[15:59:52 - main - INFO] Loaded validation datapipe of size 8
+[15:59:53 - checkpoint - ERROR] Could not find valid model file /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints/DistributedAFNOMPI.0.0.pt, skipping load
+[15:59:53 - checkpoint - WARNING] Could not find valid checkpoint file, skipping load
+/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/nvidia/dali/pipeline.py:862: Warning: The external source node '<modulus.datapipes.climate.era5_hdf5.ERA5DaliExternalSource object at 0x14a4f448fb50>' produces 3 outputs, but the output at the index 2 is not used. For best performance, adjust your callback so that it computes only the needed outputs.
+  warnings.warn(
+pre patch embed inp_shape [720, 1440] patch_size (8, 8)
+inp_shape [720, 1440]
+patch_size (8, 8)
+[16:00:42 - train - INFO] [0.98%] Mini-Batch Losses: loss =  5.375e+00
+[16:00:52 - train - INFO] [1.96%] Mini-Batch Losses: loss =  5.217e+00
+[16:01:02 - train - INFO] [2.94%] Mini-Batch Losses: loss =  5.370e+00
+[16:01:12 - train - INFO] [3.92%] Mini-Batch Losses: loss =  5.401e+00
+[16:01:22 - train - INFO] [4.91%] Mini-Batch Losses: loss =  5.354e+00
+[16:01:32 - train - INFO] [5.89%] Mini-Batch Losses: loss =  5.327e+00
+[16:01:43 - train - INFO] [6.87%] Mini-Batch Losses: loss =  5.407e+00
+[16:01:53 - train - INFO] [7.85%] Mini-Batch Losses: loss =  5.143e+00
+[16:02:03 - train - INFO] [8.83%] Mini-Batch Losses: loss =  5.260e+00
+[16:02:13 - train - INFO] [9.81%] Mini-Batch Losses: loss =  5.356e+00
+[16:02:23 - train - INFO] [10.79%] Mini-Batch Losses: loss =  5.312e+00
+[16:02:33 - train - INFO] [11.77%] Mini-Batch Losses: loss =  5.312e+00
+[16:02:43 - train - INFO] [12.76%] Mini-Batch Losses: loss =  5.332e+00
+[16:02:53 - train - INFO] [13.74%] Mini-Batch Losses: loss =  5.242e+00
+[16:03:03 - train - INFO] [14.72%] Mini-Batch Losses: loss =  5.087e+00
+[16:03:13 - train - INFO] [15.70%] Mini-Batch Losses: loss =  5.323e+00
+[16:03:23 - train - INFO] [16.68%] Mini-Batch Losses: loss =  5.337e+00
+[16:03:33 - train - INFO] [17.66%] Mini-Batch Losses: loss =  5.328e+00
+[16:03:43 - train - INFO] [18.64%] Mini-Batch Losses: loss =  5.223e+00
+[16:03:53 - train - INFO] [19.62%] Mini-Batch Losses: loss =  5.272e+00
+[16:04:03 - train - INFO] [20.60%] Mini-Batch Losses: loss =  5.364e+00
+[16:04:13 - train - INFO] [21.59%] Mini-Batch Losses: loss =  5.077e+00
+[16:04:22 - train - INFO] [22.57%] Mini-Batch Losses: loss =  5.413e+00
+[16:04:32 - train - INFO] [23.55%] Mini-Batch Losses: loss =  5.234e+00
+[16:04:42 - train - INFO] [24.53%] Mini-Batch Losses: loss =  5.297e+00
+[16:04:52 - train - INFO] [25.51%] Mini-Batch Losses: loss =  5.192e+00
+[16:05:02 - train - INFO] [26.49%] Mini-Batch Losses: loss =  5.273e+00
+[16:05:12 - train - INFO] [27.47%] Mini-Batch Losses: loss =  5.488e+00
+[16:05:22 - train - INFO] [28.45%] Mini-Batch Losses: loss =  5.358e+00
+[16:05:32 - train - INFO] [29.43%] Mini-Batch Losses: loss =  5.336e+00
+[16:05:41 - train - INFO] [30.42%] Mini-Batch Losses: loss =  5.335e+00
+[16:05:51 - train - INFO] [31.40%] Mini-Batch Losses: loss =  5.330e+00
+[16:06:01 - train - INFO] [32.38%] Mini-Batch Losses: loss =  5.087e+00
+[16:06:11 - train - INFO] [33.36%] Mini-Batch Losses: loss =  5.142e+00
+[16:06:21 - train - INFO] [34.34%] Mini-Batch Losses: loss =  5.395e+00
+[16:06:31 - train - INFO] [35.32%] Mini-Batch Losses: loss =  5.390e+00
+[16:06:40 - train - INFO] [36.30%] Mini-Batch Losses: loss =  5.373e+00
+[16:06:50 - train - INFO] [37.28%] Mini-Batch Losses: loss =  5.307e+00
+[16:07:00 - train - INFO] [38.27%] Mini-Batch Losses: loss =  5.385e+00
+[16:07:10 - train - INFO] [39.25%] Mini-Batch Losses: loss =  5.314e+00
+[16:07:20 - train - INFO] [40.23%] Mini-Batch Losses: loss =  5.343e+00
+[16:07:30 - train - INFO] [41.21%] Mini-Batch Losses: loss =  5.291e+00
+[16:07:40 - train - INFO] [42.19%] Mini-Batch Losses: loss =  5.236e+00
+[16:07:49 - train - INFO] [43.17%] Mini-Batch Losses: loss =  5.462e+00
+[16:07:59 - train - INFO] [44.15%] Mini-Batch Losses: loss =  5.187e+00
+[16:08:09 - train - INFO] [45.13%] Mini-Batch Losses: loss =  5.272e+00
+[16:08:19 - train - INFO] [46.11%] Mini-Batch Losses: loss =  5.381e+00
+[16:08:29 - train - INFO] [47.10%] Mini-Batch Losses: loss =  5.406e+00
+[16:08:38 - train - INFO] [48.08%] Mini-Batch Losses: loss =  5.465e+00
+[16:08:48 - train - INFO] [49.06%] Mini-Batch Losses: loss =  5.297e+00
+[16:08:58 - train - INFO] [50.04%] Mini-Batch Losses: loss =  5.439e+00
+[16:09:07 - train - INFO] [51.02%] Mini-Batch Losses: loss =  5.492e+00
+[16:09:17 - train - INFO] [52.00%] Mini-Batch Losses: loss =  5.187e+00
+[16:09:26 - train - INFO] [52.98%] Mini-Batch Losses: loss =  5.151e+00
+[16:09:36 - train - INFO] [53.96%] Mini-Batch Losses: loss =  5.339e+00
+[16:09:46 - train - INFO] [54.95%] Mini-Batch Losses: loss =  5.367e+00
+[16:09:55 - train - INFO] [55.93%] Mini-Batch Losses: loss =  5.483e+00
+[16:10:05 - train - INFO] [56.91%] Mini-Batch Losses: loss =  5.263e+00
+[16:10:14 - train - INFO] [57.89%] Mini-Batch Losses: loss =  5.261e+00
+[16:10:24 - train - INFO] [58.87%] Mini-Batch Losses: loss =  5.185e+00
+[16:10:33 - train - INFO] [59.85%] Mini-Batch Losses: loss =  5.122e+00
+[16:10:43 - train - INFO] [60.83%] Mini-Batch Losses: loss =  5.450e+00
+[16:10:53 - train - INFO] [61.81%] Mini-Batch Losses: loss =  5.442e+00
+[16:11:02 - train - INFO] [62.79%] Mini-Batch Losses: loss =  5.324e+00
+[16:11:12 - train - INFO] [63.78%] Mini-Batch Losses: loss =  5.399e+00
+[16:11:22 - train - INFO] [64.76%] Mini-Batch Losses: loss =  5.140e+00
+[16:11:32 - train - INFO] [65.74%] Mini-Batch Losses: loss =  5.177e+00
+[16:11:42 - train - INFO] [66.72%] Mini-Batch Losses: loss =  5.444e+00
+[16:11:52 - train - INFO] [67.70%] Mini-Batch Losses: loss =  5.297e+00
+[16:12:01 - train - INFO] [68.68%] Mini-Batch Losses: loss =  5.360e+00
+[16:12:11 - train - INFO] [69.66%] Mini-Batch Losses: loss =  5.333e+00
+[16:12:21 - train - INFO] [70.64%] Mini-Batch Losses: loss =  5.393e+00
+[16:12:31 - train - INFO] [71.62%] Mini-Batch Losses: loss =  5.208e+00
+[16:12:41 - train - INFO] [72.61%] Mini-Batch Losses: loss =  5.367e+00
+[16:12:50 - train - INFO] [73.59%] Mini-Batch Losses: loss =  5.276e+00
+[16:13:00 - train - INFO] [74.57%] Mini-Batch Losses: loss =  5.336e+00
+[16:13:10 - train - INFO] [75.55%] Mini-Batch Losses: loss =  5.397e+00
+[16:13:20 - train - INFO] [76.53%] Mini-Batch Losses: loss =  5.400e+00
+[16:13:30 - train - INFO] [77.51%] Mini-Batch Losses: loss =  5.317e+00
+[16:13:39 - train - INFO] [78.49%] Mini-Batch Losses: loss =  5.356e+00
+[16:13:49 - train - INFO] [79.47%] Mini-Batch Losses: loss =  5.273e+00
+[16:13:59 - train - INFO] [80.46%] Mini-Batch Losses: loss =  5.387e+00
+[16:14:09 - train - INFO] [81.44%] Mini-Batch Losses: loss =  5.422e+00
+[16:14:19 - train - INFO] [82.42%] Mini-Batch Losses: loss =  5.363e+00
+[16:14:28 - train - INFO] [83.40%] Mini-Batch Losses: loss =  5.314e+00
+[16:14:38 - train - INFO] [84.38%] Mini-Batch Losses: loss =  5.241e+00
+[16:14:48 - train - INFO] [85.36%] Mini-Batch Losses: loss =  5.203e+00
+[16:14:58 - train - INFO] [86.34%] Mini-Batch Losses: loss =  5.118e+00
+[16:15:08 - train - INFO] [87.32%] Mini-Batch Losses: loss =  5.321e+00
+[16:15:17 - train - INFO] [88.30%] Mini-Batch Losses: loss =  5.372e+00
+[16:15:27 - train - INFO] [89.29%] Mini-Batch Losses: loss =  5.389e+00
+[16:15:37 - train - INFO] [90.27%] Mini-Batch Losses: loss =  5.363e+00
+[16:15:47 - train - INFO] [91.25%] Mini-Batch Losses: loss =  5.417e+00
+[16:15:57 - train - INFO] [92.23%] Mini-Batch Losses: loss =  5.331e+00
+[16:16:06 - train - INFO] [93.21%] Mini-Batch Losses: loss =  5.313e+00
+[16:16:16 - train - INFO] [94.19%] Mini-Batch Losses: loss =  5.262e+00
+[16:16:26 - train - INFO] [95.17%] Mini-Batch Losses: loss =  5.135e+00
+[16:16:36 - train - INFO] [96.15%] Mini-Batch Losses: loss =  5.098e+00
+[16:16:45 - train - INFO] [97.14%] Mini-Batch Losses: loss =  5.177e+00
+[16:16:55 - train - INFO] [98.12%] Mini-Batch Losses: loss =  5.186e+00
+[16:17:05 - train - INFO] [99.10%] Mini-Batch Losses: loss =  5.199e+00
+[16:17:14 - train - INFO] Epoch 1 Metrics: Learning Rate =  5.000e-04, loss =  5.302e+00
+[16:17:14 - train - INFO] Epoch Execution Time:  1.041e+03s, Time/Iter:  1.021e+02ms
+/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/nvidia/dali/pipeline.py:862: Warning: The external source node '<modulus.datapipes.climate.era5_hdf5.ERA5DaliExternalSource object at 0x14a4be9cbed0>' produces 3 outputs, but the output at the index 2 is not used. For best performance, adjust your callback so that it computes only the needed outputs.
+  warnings.warn(
+[16:17:40 - valid - INFO] Epoch 1 Metrics: Validation error =  1.079e+02
+[16:17:40 - valid - INFO] Epoch Execution Time:  2.605e+01s, Time/Iter:  2.605e+04ms
+/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/torch/optim/lr_scheduler.py:143: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn("Detected call of `lr_scheduler.step()` before `optimizer.step()`. "
+[16:17:40 - checkpoint - INFO] Saved model state dictionary: /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints/DistributedAFNOMPI.0.1.pt
+[16:17:40 - checkpoint - INFO] Saved training checkpoint: /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints/checkpoint.0.1.pt
+[16:17:50 - train - INFO] [0.98%] Mini-Batch Losses: loss =  5.114e+00
+[16:18:00 - train - INFO] [1.96%] Mini-Batch Losses: loss =  5.260e+00
+[16:18:10 - train - INFO] [2.94%] Mini-Batch Losses: loss =  5.289e+00
+[16:18:19 - train - INFO] [3.92%] Mini-Batch Losses: loss =  5.371e+00
+[16:18:29 - train - INFO] [4.91%] Mini-Batch Losses: loss =  5.151e+00
+[16:18:39 - train - INFO] [5.89%] Mini-Batch Losses: loss =  5.247e+00
+[16:18:48 - train - INFO] [6.87%] Mini-Batch Losses: loss =  5.433e+00
+[16:18:58 - train - INFO] [7.85%] Mini-Batch Losses: loss =  5.455e+00
+[16:19:08 - train - INFO] [8.83%] Mini-Batch Losses: loss =  5.387e+00
+[16:19:18 - train - INFO] [9.81%] Mini-Batch Losses: loss =  5.163e+00
+[16:19:27 - train - INFO] [10.79%] Mini-Batch Losses: loss =  5.311e+00
+[16:19:37 - train - INFO] [11.77%] Mini-Batch Losses: loss =  5.430e+00
+[16:19:47 - train - INFO] [12.76%] Mini-Batch Losses: loss =  5.429e+00
+[16:19:57 - train - INFO] [13.74%] Mini-Batch Losses: loss =  5.311e+00
+[16:20:06 - train - INFO] [14.72%] Mini-Batch Losses: loss =  5.311e+00
+[16:20:16 - train - INFO] [15.70%] Mini-Batch Losses: loss =  5.289e+00
+[16:20:26 - train - INFO] [16.68%] Mini-Batch Losses: loss =  5.087e+00
+[16:20:36 - train - INFO] [17.66%] Mini-Batch Losses: loss =  5.303e+00
+[16:20:46 - train - INFO] [18.64%] Mini-Batch Losses: loss =  5.422e+00
+[16:20:55 - train - INFO] [19.62%] Mini-Batch Losses: loss =  5.312e+00
+[16:21:05 - train - INFO] [20.60%] Mini-Batch Losses: loss =  5.358e+00
+[16:21:15 - train - INFO] [21.59%] Mini-Batch Losses: loss =  5.368e+00
+[16:21:25 - train - INFO] [22.57%] Mini-Batch Losses: loss =  5.351e+00
+[16:21:35 - train - INFO] [23.55%] Mini-Batch Losses: loss =  5.283e+00
+[16:21:44 - train - INFO] [24.53%] Mini-Batch Losses: loss =  5.270e+00
+[16:21:54 - train - INFO] [25.51%] Mini-Batch Losses: loss =  5.222e+00
+[16:22:04 - train - INFO] [26.49%] Mini-Batch Losses: loss =  5.385e+00
+[16:22:14 - train - INFO] [27.47%] Mini-Batch Losses: loss =  5.431e+00
+[16:22:24 - train - INFO] [28.45%] Mini-Batch Losses: loss =  5.286e+00
+[16:22:34 - train - INFO] [29.43%] Mini-Batch Losses: loss =  5.421e+00
+[16:22:43 - train - INFO] [30.42%] Mini-Batch Losses: loss =  5.201e+00
+[16:22:53 - train - INFO] [31.40%] Mini-Batch Losses: loss =  5.265e+00
+[16:23:03 - train - INFO] [32.38%] Mini-Batch Losses: loss =  5.395e+00
+[16:23:13 - train - INFO] [33.36%] Mini-Batch Losses: loss =  5.305e+00
+[16:23:23 - train - INFO] [34.34%] Mini-Batch Losses: loss =  5.439e+00
+[16:23:32 - train - INFO] [35.32%] Mini-Batch Losses: loss =  5.436e+00
+slurmstepd: error: *** JOB 2479076 ON hkn0402 CANCELLED AT 2024-06-26T16:23:32 ***
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 2479076
+Cluster: hk
+User/Group: ie5012/hk-project-epais
+Account: hk-project-epais
+State: CANCELLED (exit code 0)
+Partition: dev_accelerated
+Nodes: 1
+Cores per node: 152
+Nodelist: hkn0402
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 2-13:26:00 core-walltime
+Job Wall-clock time: 00:24:15
+Starttime: Wed Jun 26 15:59:17 2024
+Endtime: Wed Jun 26 16:23:32 2024
+Memory Utilized: 22.77 GB
+Memory Efficiency: 4.65% of 489.84 GB
+Energy Consumed: 1107234 Joule / 307.565 Watthours
+Average node power draw: 760.985567010309 Watt

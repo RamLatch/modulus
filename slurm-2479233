@@ -1,0 +1,78 @@
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/modulus/distributed/manager.py", line 339, in initialize
+    DistributedManager.initialize_env()
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/modulus/distributed/manager.py", line 248, in initialize_env
+    rank = int(os.environ.get("RANK"))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/hkfs/work/workspace/scratch/ie5012-MA/modulus/examples/weather/fcn_afno/train_era5.py", line 249, in <module>
+    main()
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+           ^^^^^^
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+            ^^^^^^^^^^
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+        ^^^^^^^^^^^^^^^^
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/hkfs/work/workspace/scratch/ie5012-MA/modulus/examples/weather/fcn_afno/train_era5.py", line 96, in main
+    DistributedManager.initialize()
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/modulus/distributed/manager.py", line 342, in initialize
+    DistributedManager.initialize_slurm(port)
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/modulus/distributed/manager.py", line 298, in initialize_slurm
+    DistributedManager.setup(
+  File "/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/modulus/distributed/manager.py", line 379, in setup
+    os.environ["MASTER_ADDR"] = addr
+    ~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<frozen os>", line 684, in __setitem__
+  File "<frozen os>", line 758, in encode
+TypeError: str expected, not NoneType
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[7560,1],0]
+  Exit code:    1
+--------------------------------------------------------------------------
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 2479233
+Cluster: hk
+User/Group: ie5012/hk-project-epais
+Account: hk-project-epais
+State: FAILED (exit code 1)
+Partition: dev_accelerated
+Nodes: 1
+Cores per node: 152
+Nodelist: hkn0402
+CPU Utilized: 00:00:07
+CPU Efficiency: 0.12% of 01:38:48 core-walltime
+Job Wall-clock time: 00:00:39
+Starttime: Wed Jun 26 16:36:06 2024
+Endtime: Wed Jun 26 16:36:45 2024
+Memory Utilized: 623.25 MB
+Memory Efficiency: 0.12% of 489.84 GB

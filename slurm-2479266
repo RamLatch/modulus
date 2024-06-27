@@ -1,0 +1,62 @@
+[W Utils.hpp:135] Warning: Environment variable NCCL_ASYNC_ERROR_HANDLING is deprecated; use TORCH_NCCL_ASYNC_ERROR_HANDLING instead (function getCvarInt)
+[16:58:41 - mlflow - WARNING] [93mChecking MLFlow logging location is working (if this hangs it's not)[0m
+[16:58:41 - mlflow - INFO] [92mMLFlow logging location is working[0m
+[16:58:41 - mlflow - INFO] [94mNo Modulus-Launch-Dev experiment found, creating...[0m
+[16:58:41 - main - INFO] [92mLoaded datapipe of size 10192[0m
+[16:58:41 - main - INFO] [92mLoaded validation datapipe of size 8[0m
+[16:58:41 - checkpoint - ERROR] [91mCould not find valid model file /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints/AFNO.0.0.mdlus, skipping load[0m
+[16:58:41 - checkpoint - INFO] [92mLoaded checkpoint file /hkfs/work/workspace/scratch/ie5012-MA/results/modulus/checkpoints/checkpoint.0.1.pt to device cuda:0[0m
+[16:58:41 - checkpoint - INFO] [92mLoaded optimizer state dictionary[0m
+[16:58:41 - checkpoint - INFO] [92mLoaded scheduler state dictionary[0m
+/hkfs/work/workspace/scratch/ie5012-MA/.venvs/Modulus/lib64/python3.11/site-packages/nvidia/dali/pipeline.py:862: Warning: The external source node '<modulus.datapipes.climate.era5_hdf5.ERA5DaliExternalSource object at 0x150267611750>' produces 3 outputs, but the output at the index 2 is not used. For best performance, adjust your callback so that it computes only the needed outputs.
+  warnings.warn(
+--------------------------------------------------------------------------
+It looks like orte_init failed for some reason; your parallel process is
+likely to abort.  There are many reasons that a parallel process can
+fail during orte_init; some of which are due to configuration or
+environment problems.  This failure appears to be an internal failure;
+here's some additional information (which may only be relevant to an
+Open MPI developer):
+
+  getting local rank failed
+  --> Returned value No permission (-17) instead of ORTE_SUCCESS
+--------------------------------------------------------------------------
+[hkn0402.localdomain:4085156] [[41494,0],0] ORTE_ERROR_LOG: Out of resource in file ../../orte/util/show_help.c at line 507
+--------------------------------------------------------------------------
+It looks like MPI_INIT failed for some reason; your parallel process is
+likely to abort.  There are many reasons that a parallel process can
+fail during MPI_INIT; some of which are due to configuration or environment
+problems.  This failure appears to be an internal failure; here's some
+additional information (which may only be relevant to an Open MPI
+developer):
+
+  ompi_mpi_init: ompi_rte_init failed
+  --> Returned "No permission" (-17) instead of "Success" (0)
+--------------------------------------------------------------------------
+*** An error occurred in MPI_Init_thread
+*** on a NULL communicator
+*** MPI_ERRORS_ARE_FATAL (processes in this communicator will now abort,
+***    and potentially your MPI job)
+[hkn0402.localdomain:4085195] Local abort before MPI_INIT completed completed successfully, but am not able to aggregate error messages, and not able to guarantee that all other processes were killed!
+slurmstepd: error: *** JOB 2479266 ON hkn0402 CANCELLED AT 2024-06-26T17:58:35 DUE TO TIME LIMIT ***
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 2479266
+Cluster: hk
+User/Group: ie5012/hk-project-epais
+Account: hk-project-epais
+State: TIMEOUT (exit code 0)
+Partition: dev_accelerated
+Nodes: 1
+Cores per node: 152
+Nodelist: hkn0402
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 6-09:13:28 core-walltime
+Job Wall-clock time: 01:00:29
+Starttime: Wed Jun 26 16:58:06 2024
+Endtime: Wed Jun 26 17:58:35 2024
+Memory Utilized: 1.40 GB
+Memory Efficiency: 0.29% of 489.84 GB
+Energy Consumed: 1999451 Joule / 555.403055555556 Watthours
+Average node power draw: 550.964728575365 Watt
