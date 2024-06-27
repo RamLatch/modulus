@@ -1096,8 +1096,7 @@ class DistributedAFNONet(nn.Module):
                 for param in self.head.parameters():
                     param_data = param.data.cpu().numpy()
                     comm.Bcast(param_data, root=0)
-                    if not comm.rank == 0:
-                        param.data = torch.from_numpy(param_data).to(param.device)
+                    param.data = torch.from_numpy(param_data).to(param.device)
                 self.synchronized_head = True
 
         x = self.head(x)
