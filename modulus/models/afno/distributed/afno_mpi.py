@@ -997,7 +997,7 @@ class DistributedAFNONet(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_return.pkl", "wb"))
             try:    print("DistributedAFNONet return:",x.detach().cpu().numpy())
             except: print("DistributedAFNONet return:",x)
-
+        exit(1)
         return x
 
 

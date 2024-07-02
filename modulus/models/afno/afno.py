@@ -690,4 +690,5 @@ class AFNO(Module):
         # [b c_out, h, p1, w, p2]
         out = out.reshape(list(out.shape[:2]) + [self.inp_shape[0], self.inp_shape[1]])
         # [b c_out, (h*p1), (w*p2)]
+        exit(1)
         return out
