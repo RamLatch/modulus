@@ -36,6 +36,7 @@ import math
 import warnings
 import torch
 
+
 import torch.nn.functional as F
 from dataclasses import dataclass
 from modulus.models.meta import ModelMetaData
@@ -113,7 +114,6 @@ class DropPath(nn.Module):
     def forward(self, x):
         global dumps
         return drop_path(x, self.drop_prob, self.training)
-
 
 class DistributedMLP(nn.Module):
     def __init__(
@@ -302,12 +302,9 @@ class DistributedPatchEmbed(nn.Module):
         with open(f"{debugpath}/embed_dim", "a") as f:
             f.write("embed_dim "+str(out_chans_local))
         # the weights  of this layer is shared across spatial parallel ranks
-        if REPLICATE:
-            self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
-        else:
-            self.proj = nn.Conv2d(
+        self.proj = nn.Conv2d(
                 in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
-            )
+        )
 
         # make sure we reduce them across rank
         # self.proj.weight.is_shared_spatial = True
@@ -344,8 +341,8 @@ class DistributedPatchEmbed(nn.Module):
                 f"Input input size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
         # new: B, C, H*W
-        # x = self.proj(x).flatten(2)
-        x = self.proj(x).flatten(2).transpose(1, 2)
+        x = self.proj(x).flatten(2)
+        # x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_return.pkl", "wb"))
@@ -853,7 +850,7 @@ class DistributedAFNONet(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_patch_embed.pkl", "wb"))
             # try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet patch_embed:",x)
-        x = x + self.pos_embed.transpose(1, 2)
+        x = x + self.pos_embed#.transpose(1, 2)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_embed.pkl", "wb"))

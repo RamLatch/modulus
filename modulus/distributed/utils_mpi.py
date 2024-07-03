@@ -23,7 +23,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torch.distributed as dist
 
 comm = MPI.COMM_WORLD
 
@@ -186,6 +186,22 @@ def distributed_transpose(tensor, dim0, dim1, async_op=False):
 
     return x_recv, req
 
+def _reduce_torch(input_, use_fp32=True):
+    """All-reduce the input tensor across model parallel group using torch.distributed."""
+    # Bypass the function if we are using only 1 GPU.
+    if dist.get_world_size() == 1:
+        return input_
+    
+    # All-reduce, use_fp32 only relevant for lower precisions
+    if use_fp32 and (input_.dtype.itemsize < 4) and input_.dtype.is_floating_point:
+        dtype = input_.dtype
+        inputf_ = input_.float()
+        dist.all_reduce(inputf_, op=dist.ReduceOp.SUM)
+        input_ = inputf_.to(dtype)
+    else:
+        dist.all_reduce(input_, op=dist.ReduceOp.SUM)
+
+    return input_
 
 def _reduce(input_, use_fp32=True):  # pragma: no cover
     """All-reduce the input tensor across model parallel group."""
@@ -227,6 +243,68 @@ def _split(input_, dim_):  # pragma: no cover
 
     return output
 
+
+
+def all_gather_v_wrapper_torch(
+        tensor: torch.Tensor,
+        sizes: Optional[List[int]] = None,
+        dim: int = 0
+    ) -> torch.Tensor:
+        """
+        Implements a distributed AllGatherV primitive using torch.distributed.
+        It gathers all local tensors from each rank into the full global tensor onto each rank.
+
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Local tensor on each rank
+        sizes : List[int], optional
+            List of the sizes of each chunk on each rank along distributed dimension,
+            valid and set on each rank, by default None
+        dim : int, optional
+            Dimension along which global tensor is distributed, by default 0
+
+        Returns
+        -------
+        torch.Tensor
+            Full global tensor, valid on each rank
+        """
+        world_size = dist.get_world_size()
+
+        if (sizes is not None) and (len(sizes) != world_size):
+            raise ValueError("Sizes list length must be equal to the world size")
+
+        if dim >= tensor.dim():
+            raise ValueError("Invalid dimension")
+
+        if world_size == 1:
+            return tensor.clone()
+
+        # Determine local tensor size
+        local_size = tensor.size(dim)
+        local_sizes = [torch.tensor(local_size)] * world_size
+
+        if sizes is None:
+            sizes = local_sizes
+
+        # Calculate total size for the receive buffer and displacements
+        total_size = sum(sizes)
+        displacements = [sum(sizes[:i]) for i in range(world_size)]
+
+        # Prepare the receive buffer
+        recv_buf = torch.empty(total_size, dtype=tensor.dtype, device=tensor.device)
+
+        # Flatten the tensor for sending
+        send_data = tensor.flatten()
+
+        # Perform AllGatherV operation
+        dist.all_gather(tensor_list=[recv_buf], tensor=send_data, sizes=sizes, dim=dim)
+
+        # Reconstruct the global tensor
+        global_tensor = recv_buf.view(-1, *tensor.size()[1:]).to(tensor.device)
+        global_tensor = global_tensor.type(tensor.dtype)
+
+        return global_tensor
 
 def all_gather_v_wrapper(
     tensor: torch.Tensor,
