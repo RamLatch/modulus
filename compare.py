@@ -9,13 +9,18 @@ def compare(name1,name2):
     sgl = pickle.load(open(path2, "rb"))
     print(mpi)
     print(sgl)
-    print(name1,name2,torch.equal(mpi, sgl))
+    print(name1,name2,"\n",torch.equal(mpi, sgl))
 
 tuples = [
-    ("001_mpi_distributed_afnonet_forward","001_AFNO_x"),
-    ("006_mpi_distributed_afnonet_patch_embed","002_PatchEmbed_x"),
-    ("007_mpi_distributed_afnonet_pos_embed","005_AFNO_pos_embed"),
-    ("008_mpi_distributed_afnonet_pos_drop","006_AFNO_pos_drop")
+    ("001_mpi_distributed_afnonet_Input","001_AFNO_Input"),
+    ("002_mpi_distributed_patch_embed_Input","002_PatchEmbed_Input"),
+    ("002_mpi_distributed_patch_embed_Input","002_mpi_distributed_patch_embed_copy_to_parallel_region"),
+    ("002_mpi_distributed_patch_embed_return","002_PatchEmbed_return"),
+    ("003_mpi_distributed_afnonet_patch_embed","003_AFNO_patch_embed"),
+    ("004_mpi_distributed_afnonet_pos_embed","004_AFNO_pos_embed"),
+    ("005_mpi_distributed_afnonet_pos_drop","005_AFNO_pos_drop"),
+    ("005_mpi_distributed_afnonet_reshape","005_AFNO_reshape"),
+    ("006_mpi_distributed_block_0_Input","006_Block_0_Input")
 
 ]
 
