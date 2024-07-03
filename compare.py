@@ -7,8 +7,8 @@ def compare(name1,name2):
     path2 = f"{PATH}/{name2}.pkl"
     mpi = pickle.load(open(path1, "rb"))
     sgl = pickle.load(open(path2, "rb"))
-    print(mpi)
-    print(sgl)
+    # print(mpi)
+    # print(sgl)
     print(name1,name2,"\n",mpi.shape,sgl.shape)
     print(torch.allclose(mpi, sgl))
 
