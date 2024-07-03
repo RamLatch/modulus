@@ -18,9 +18,11 @@ import torch
 from mpi4py import MPI
 
 from modulus.distributed.utils_mpi import (
-    _reduce_torch as _reduce,
+    #_reduce_torch as _reduce,
+    _reduce,
     _split,
-    all_gather_v_wrapper_torch as all_gather_v_wrapper,
+    #all_gather_v_wrapper_torch as all_gather_v_wrapper,
+    all_gather_v_wrapper,
     compute_split_shapes,
 )
 
