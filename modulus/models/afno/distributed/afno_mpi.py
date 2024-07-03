@@ -345,7 +345,7 @@ class DistributedPatchEmbed(nn.Module):
             )
         # new: B, C, H*W
         # x = self.proj(x).flatten(2)
-        x = x.type_as(torch.float16)
+        x = x.type(torch.float16)
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps +=1
