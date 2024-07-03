@@ -6,7 +6,7 @@
 
 #SBATCH -J compare
 #SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/debug/slurm_logs/compare"
-#SBATCH -p dev_accelerated
+#SBATCH -p dev_cpuonly
 #SBATCH --mem=1600mb
 
 ml purge

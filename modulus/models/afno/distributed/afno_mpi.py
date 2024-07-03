@@ -383,7 +383,8 @@ class DistributedPatchEmbed(nn.Module):
                 f"Input input size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
         # new: B, C, H*W
-        x = self.proj(x).flatten(2)
+        # x = self.proj(x).flatten(2)
+        x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_return.pkl", "wb"))
