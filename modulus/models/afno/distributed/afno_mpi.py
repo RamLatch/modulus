@@ -352,8 +352,8 @@ class DistributedPatchEmbed(nn.Module):
         )
 
         # make sure we reduce them across rank
-        self.proj.weight.is_shared_spatial = True
-        self.proj.bias.is_shared_spatial = True
+        # self.proj.weight.is_shared_spatial = True
+        # self.proj.bias.is_shared_spatial = True
 
     def forward(self, x):
         global dumps
