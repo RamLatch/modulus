@@ -31,6 +31,7 @@ if REPLICATE:
 
 from dataclasses import dataclass
 from functools import partial
+import os
 from typing import List
 
 import torch
@@ -427,9 +428,18 @@ class PatchEmbed(nn.Module):
         self.inp_shape = inp_shape
         self.patch_size = patch_size
         self.num_patches = num_patches
-        self.proj = nn.Conv2d(
-            in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
-        )
+        if REPLICATE:
+            if os.exists(f"{debugpath}/Conv2d.pkl"):
+                self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
+            else:
+                self.proj = nn.Conv2d(
+                    in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
+                )
+                pickle.dump(self.proj, open(f"{debugpath}/Conv2d.pkl", "wb"))
+        else:
+            self.proj = nn.Conv2d(
+                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
+            )
 
     def forward(self, x: Tensor) -> Tensor:
         B, C, H, W = x.shape

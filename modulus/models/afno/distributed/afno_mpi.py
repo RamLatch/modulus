@@ -302,9 +302,12 @@ class DistributedPatchEmbed(nn.Module):
         with open(f"{debugpath}/embed_dim", "a") as f:
             f.write("embed_dim "+str(out_chans_local))
         # the weights  of this layer is shared across spatial parallel ranks
-        self.proj = nn.Conv2d(
-            in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
-        )
+        if REPLICATE:
+            self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
+        else:
+            self.proj = nn.Conv2d(
+                in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
+            )
 
         # make sure we reduce them across rank
         # self.proj.weight.is_shared_spatial = True
