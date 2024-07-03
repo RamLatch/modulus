@@ -853,7 +853,7 @@ class DistributedAFNONet(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_patch_embed.pkl", "wb"))
             # try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet patch_embed:",x)
-        x = x + self.pos_embed
+        x = x + self.pos_embed.transpose(1, 2)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_embed.pkl", "wb"))
