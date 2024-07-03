@@ -438,7 +438,7 @@ class PatchEmbed(nn.Module):
                 pickle.dump(self.proj, open(f"{debugpath}/Conv2d.pkl", "wb"))
         else:
             self.proj = nn.Conv2d(
-                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
+                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size, dtype=torch.float16
             )
 
     def forward(self, x: Tensor) -> Tensor:
