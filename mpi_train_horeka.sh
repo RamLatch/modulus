@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --ntasks-per-node=1
 
-#SBATCH -J modulus_Test
+#SBATCH -J m_mpi_T
 #SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/mpi-%j"
 #SBATCH -p dev_accelerated
 #SBATCH --mem=501600mb
