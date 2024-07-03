@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=1
 
 #SBATCH -J m_mpi_T
-#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/debug/slurm_logs/mpi.out"  #results/slurm_logs/test_Dummy/mpi-%j"
+#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/mpi-%j.out"  #results/slurm_logs/test_Dummy/mpi-%j"
 #SBATCH -p dev_accelerated
 #SBATCH --mem=501600mb
 #SBATCH --exclusive
