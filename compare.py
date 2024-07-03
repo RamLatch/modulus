@@ -10,7 +10,7 @@ def compare(name1,name2):
     # print(mpi)
     # print(sgl)
     print(name1,name2,"\n",mpi.shape,sgl.shape)
-    print(torch.allclose(mpi, sgl))
+    print(torch.allclose(mpi.type_as(sgl), sgl))
 
 tuples = [
     ("001_mpi_distributed_afnonet_Input","001_AFNO_Input"),
