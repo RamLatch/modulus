@@ -306,7 +306,7 @@ class DistributedPatchEmbed(nn.Module):
             self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
         else:
             self.proj = nn.Conv2d(
-                in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size, dtype=torch.float16
+                in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
             )
 
         # make sure we reduce them across rank
@@ -345,7 +345,6 @@ class DistributedPatchEmbed(nn.Module):
             )
         # new: B, C, H*W
         # x = self.proj(x).flatten(2)
-        x = x.type(torch.float16)
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps +=1

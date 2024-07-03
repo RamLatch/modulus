@@ -12,8 +12,8 @@
 ml purge
 
 BASE_DIR="/hkfs/work/workspace/scratch/ie5012-MA"
-BATCH_FILE_SGL="${BASE_DIR}/modulus/train_horeka.sh"
-BATCH_FILE_MPI="${BASE_DIR}/modulus/mpi_train_horeka.sh"
+BATCH_FILE_SGL="${BASE_DIR}/modulus/debug_sgl.sh"
+BATCH_FILE_MPI="${BASE_DIR}/modulus/debug_mpi.sh"
 BATCH_FILE_COM="${BASE_DIR}/modulus/compare.sh"
 
 jobID1=$(sbatch $BATCH_FILE_SGL 2>&1 | sed 's/[S,a-z]* //g')

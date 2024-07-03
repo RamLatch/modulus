@@ -438,7 +438,7 @@ class PatchEmbed(nn.Module):
                 pickle.dump(self.proj, open(f"{debugpath}/Conv2d.pkl", "wb"))
         else:
             self.proj = nn.Conv2d(
-                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size, dtype=torch.float16
+                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
             )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -453,7 +453,6 @@ class PatchEmbed(nn.Module):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
-        x=x.type(torch.float16)
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps += 1

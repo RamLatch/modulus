@@ -8,6 +8,7 @@
 #SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/debug/slurm_logs/compare"
 #SBATCH -p dev_accelerated
 #SBATCH --mem=1600mb
+#SBATCH --mail-type=END
 
 ml purge
 
