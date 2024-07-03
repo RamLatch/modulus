@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=1
 
 #SBATCH -J m_sgl_T
-#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/sgl-%j"
+#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/debug/slurm_logs/sgl.out"#results/slurm_logs/test_Dummy/sgl-%j"
 #SBATCH -p dev_accelerated
 #SBATCH --mem=501600mb
 #SBATCH --exclusive
