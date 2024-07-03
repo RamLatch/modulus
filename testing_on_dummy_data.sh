@@ -5,10 +5,9 @@
 #SBATCH -t 00:01:00
 
 #SBATCH -J DummyTest
-#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/slurm-%j"
+#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/startBoth"
 #SBATCH -p dev_cpuonly
 #SBATCH --mem=1600mb
-#SBATCH --mail-type=ALL
 
 ml purge
 
