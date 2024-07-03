@@ -44,7 +44,9 @@ from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
+import torch.distributed as dist
 comm = MPI.COMM_WORLD
+dist.init_process_group()
 
 def loss_func(x, y, p=2.0):
     yv = y.reshape(x.size()[0], -1)
