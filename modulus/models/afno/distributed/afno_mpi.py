@@ -19,7 +19,7 @@ if REPLICATE:
     import numpy as np
     import torch
     import pickle
-
+    torch.use_deterministic_algorithms(True)
     random.seed(42)
     np.random.seed(42)
     torch.manual_seed(42)

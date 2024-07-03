@@ -18,7 +18,7 @@ if REPLICATE:
     import random
     import numpy as np
     import torch
-
+    torch.use_deterministic_algorithms(True)
     random.seed(42)
     np.random.seed(42)
     torch.manual_seed(42)
