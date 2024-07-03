@@ -20,4 +20,4 @@ tuples = [
 ]
 
 for t in tuples:
-    compare(t)
+    compare(t[0],t[1])
