@@ -73,6 +73,10 @@ class AFNOMlp(nn.Module):
         activation_fn: nn.Module = nn.GELU(),
         drop: float = 0.0,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__()
         self.fc1 = nn.Linear(in_features, latent_features)
         self.act = activation_fn
@@ -144,6 +148,10 @@ class AFNO2DLayer(nn.Module):
         hard_thresholding_fraction: float = 1,
         hidden_size_factor: int = 1,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__()
         if not (hidden_size % num_blocks == 0):
             raise ValueError(
@@ -309,6 +317,10 @@ class Block(nn.Module):
         sparsity_threshold: float = 0.01,
         hard_thresholding_fraction: float = 1.0,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__()
         self.norm1 = norm_layer(embed_dim)
         self.filter = AFNO2DLayer(
@@ -401,6 +413,10 @@ class PatchEmbed(nn.Module):
         patch_size: List[int] = [16, 16],
         embed_dim: int = 256,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__()
         if len(inp_shape) != 2:
             raise ValueError("inp_shape should be a list of length 2")
@@ -521,6 +537,10 @@ class AFNO(Module):
         sparsity_threshold: float = 0.01,
         hard_thresholding_fraction: float = 1.0,
     ) -> None:
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__(meta=MetaData())
         if len(inp_shape) != 2:
             raise ValueError("inp_shape should be a list of length 2")

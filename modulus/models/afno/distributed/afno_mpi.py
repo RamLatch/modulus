@@ -160,6 +160,10 @@ class DropPath(nn.Module):
     """
 
     def __init__(self, drop_prob=None):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
 
@@ -179,6 +183,10 @@ class DistributedMLP(nn.Module):
         input_is_matmul_parallel=False,
         output_is_matmul_parallel=False,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super(DistributedMLP, self).__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -307,6 +315,10 @@ class DistributedPatchEmbed(nn.Module):
         input_is_matmul_parallel=False,
         output_is_matmul_parallel=True,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super(DistributedPatchEmbed, self).__init__()
 
         # store params
@@ -433,6 +445,10 @@ class DistributedAFNO2D(nn.Module):
         input_is_matmul_parallel=False,
         output_is_matmul_parallel=False,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super(DistributedAFNO2D, self).__init__()
         if not (hidden_size % num_blocks == 0):
             raise ValueError(
@@ -642,6 +658,10 @@ class DistributedBlock(nn.Module):
         input_is_matmul_parallel=False,
         output_is_matmul_parallel=False,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super(DistributedBlock, self).__init__()
 
         # model parallelism
@@ -775,6 +795,10 @@ class DistributedAFNONet(nn.Module):
         input_is_matmul_parallel=False,
         output_is_matmul_parallel=False,
     ):
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__()
 
         # comm sizes
@@ -1038,6 +1062,10 @@ class DistributedAFNOMPI(modulus.Module):
         channel_parallel_inputs: bool = False,
         channel_parallel_outputs: bool = False,
     ) -> None:
+        if REPLICATE:
+            random.seed(42)
+            np.random.seed(42)
+            torch.manual_seed(42)
         super().__init__(meta=MetaData())
 
         out_channels = out_channels or in_channels

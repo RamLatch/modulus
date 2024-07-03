@@ -9,7 +9,7 @@ def compare(name1,name2):
     sgl = pickle.load(open(path2, "rb"))
     print(mpi)
     print(sgl)
-    print(name1,name2,"\n",mpi.shape,sgl.shape,"\n",torch.equal(mpi, sgl))
+    print(name1,name2,"\n",mpi.shape,sgl.shape,"\n",torch.allclose(mpi, sgl))
 
 tuples = [
     ("001_mpi_distributed_afnonet_Input","001_AFNO_Input"),
