@@ -429,7 +429,7 @@ class PatchEmbed(nn.Module):
         self.patch_size = patch_size
         self.num_patches = num_patches
         if REPLICATE:
-            if os.exists(f"{debugpath}/Conv2d.pkl"):
+            if os.path.exists(f"{debugpath}/Conv2d.pkl"):
                 self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
             else:
                 self.proj = nn.Conv2d(
