@@ -83,36 +83,36 @@ class AFNOMlp(nn.Module):
         global dumps
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_x.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_Input.pkl", "wb"))
             try:    print("AFNOMlp x:",x.detach().cpu().numpy())
             except: print("AFNOMlp x:",x)
         x = self.fc1(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_fc1.pkl", "wb"))
             try:    print("AFNOMlp fc1:",x.detach().cpu().numpy())
             except: print("AFNOMlp fc1:",x)
         x = self.act(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_act.pkl", "wb"))
             try:    print("AFNOMlp act:",x.detach().cpu().numpy())
             except: print("AFNOMlp act:",x)
         x = self.drop(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_drop.pkl", "wb"))
             try:    print("AFNOMlp drop:",x.detach().cpu().numpy())
             except: print("AFNOMlp drop:",x)
         x = self.fc2(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_fc2.pkl", "wb"))
             try:    print("AFNOMlp fc2:",x.detach().cpu().numpy())
             except: print("AFNOMlp fc2:",x)
         x = self.drop(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_drop2.pkl", "wb"))
             try:    print("AFNOMlp return:",x.detach().cpu().numpy())
             except: print("AFNOMlp return:",x)
@@ -170,14 +170,14 @@ class AFNO2DLayer(nn.Module):
         x = x.float()
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_Input.pkl", "wb"))
             try:    print("AFNO2DLayer x:",x.detach().cpu().numpy())
             except: print("AFNO2DLayer x:",x)
         B, H, W, C = x.shape
         # Using ONNX friendly FFT functions
         x = fft.rfft2(x, dim=(1, 2), norm="ortho")
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_rfft2.pkl", "wb"))
             try:    print("AFNO2DLayer rfft2:",x.detach().cpu().numpy())
             except: print("AFNO2DLayer rfft2:",x)
@@ -185,12 +185,12 @@ class AFNO2DLayer(nn.Module):
         x_real = x_real.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
         x_imag = x_imag.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_real.pkl", "wb"))
             try:    print("AFNO2DLayer x_real:",x_real.detach().cpu().numpy())
             except: print("AFNO2DLayer x_real:",x_real)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_imag.pkl", "wb"))
             try:    print("AFNO2DLayer x_imag:",x_imag.detach().cpu().numpy())
             except: print("AFNO2DLayer x_imag:",x_imag)
@@ -208,7 +208,7 @@ class AFNO2DLayer(nn.Module):
             self.b1[0]
         )
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(o1_real, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o1_real.pkl", "wb"))
             try:    print("AFNO2DLayer o1_real:",o1_real.detach().cpu().numpy())
             except: print("AFNO2DLayer o1_real:",o1_real)
@@ -218,7 +218,7 @@ class AFNO2DLayer(nn.Module):
             self.b1[1]
         )
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(o1_imag, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o1_imag.pkl", "wb"))
             try:    print("AFNO2DLayer o1_imag:",o1_imag.detach().cpu().numpy())
             except: print("AFNO2DLayer o1_imag:",o1_imag)
@@ -238,14 +238,14 @@ class AFNO2DLayer(nn.Module):
             self.b2[1]
         )
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(o2[..., 1], open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o2_imag.pkl", "wb"))
             try:    print("AFNO2DLayer o2_imag:",o2[..., 1].detach().cpu().numpy())
             except: print("AFNO2DLayer o2_imag:",o2[..., 1])
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
         x = fft.view_as_complex(x)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_complex.pkl", "wb"))
             try:    print("AFNO2DLayer x_complex:",x.detach().cpu().numpy())
             except: print("AFNO2DLayer x_complex:",x)
@@ -259,13 +259,13 @@ class AFNO2DLayer(nn.Module):
         # Using ONNX friendly FFT functions
         x = fft.irfft2(x, s=(H, W), dim=(1, 2), norm="ortho")
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_irfft2.pkl", "wb"))
             try:    print("AFNO2DLayer irfft2:",x.detach().cpu().numpy())
             except: print("AFNO2DLayer irfft2:",x)
         x = x.type(dtype)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_return.pkl", "wb"))
             try:    print("AFNO2DLayer return:",x+bias.detach().cpu().numpy())
             except: print("AFNO2DLayer return:",x+bias)
@@ -331,19 +331,19 @@ class Block(nn.Module):
         residual = x
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_x.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_Input.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} residual:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} residual:",x)
         x = self.norm1(x)
         if REPLICATE:
-            dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_norm1.pkl", "wb"))
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_norm1.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} norm1:",x)
         x = self.filter(x)
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_filter.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_filter.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} filter:",x)
 
@@ -352,26 +352,26 @@ class Block(nn.Module):
             residual = x
             if REPLICATE:
                 dumps += 1
-                pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_double_skip.pkl", "wb"))
+                pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_double_skip.pkl", "wb"))
                 try:    print(f"Block {BLOCK_DEBUG} double skip:",x.detach().cpu().numpy())
                 except: print(f"Block {BLOCK_DEBUG} double skip:",x)
 
         x = self.norm2(x)
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_norm2.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_norm2.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} norm2:",x)
         x = self.mlp(x)
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_mlp.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_mlp.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} mlp:",x)
         x = x + residual
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_return.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_return.pkl", "wb"))
             try:    print(f"Block {BLOCK_DEBUG} return:",x.detach().cpu().numpy())
             except: print(f"Block {BLOCK_DEBUG} return:",x)
         return x
@@ -420,7 +420,7 @@ class PatchEmbed(nn.Module):
         global dumps
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_x.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_Input.pkl", "wb"))
             try:    print("PatchEmbed x:",x.detach().cpu().numpy())
             except: print("PatchEmbed x:",x)
         if not (H == self.inp_shape[0] and W == self.inp_shape[1]):
@@ -429,7 +429,7 @@ class PatchEmbed(nn.Module):
             )
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
-            dumps += 1
+            # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_return.pkl", "wb"))
             try:    print("PatchEmbed return:",x.detach().cpu().numpy())
             except: print("PatchEmbed return:",x)
@@ -621,7 +621,7 @@ class AFNO(Module):
 
         x = x.reshape(B, self.h, self.w, self.embed_dim)
         if REPLICATE:
-            dumps += 1
+            #dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_reshape.pkl", "wb"))
             try:    print("Afno reshape:",x.detach().cpu().numpy())
             except: print("Afno reshape:",x)
@@ -639,7 +639,7 @@ class AFNO(Module):
         global dumps
         if REPLICATE:
             dumps += 1
-            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_x.pkl", "wb"))
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_Input.pkl", "wb"))
             try:    print("Afno forward:",x.detach().cpu().numpy())
             except: print("Afno forward:",x)
         x = self.forward_features(x)
@@ -662,5 +662,10 @@ class AFNO(Module):
         # [b c_out, h, p1, w, p2]
         out = out.reshape(list(out.shape[:2]) + [self.inp_shape[0], self.inp_shape[1]])
         # [b c_out, (h*p1), (w*p2)]
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(out, open(f"{debugpath}/{dumps:03d}_AFNO_return.pkl", "wb"))
+            try:    print("Afno return:",out.detach().cpu().numpy())
+            except: print("Afno return:",out)
         exit(1)
         return out
