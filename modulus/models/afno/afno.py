@@ -443,6 +443,7 @@ class PatchEmbed(nn.Module):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
+        x=x.type(x.dtype)
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps += 1
@@ -687,5 +688,5 @@ class AFNO(Module):
             pickle.dump(out, open(f"{debugpath}/{dumps:03d}_AFNO_return.pkl", "wb"))
             try:    print("Afno return:",out.detach().cpu().numpy())
             except: print("Afno return:",out)
-        exit(1)
+        if REPLICATE: exit(1)
         return out
