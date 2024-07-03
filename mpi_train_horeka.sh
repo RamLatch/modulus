@@ -22,6 +22,7 @@ TRAIN_FILE="${BASE_DIR}/modulus/examples/weather/fcn_afno/train_era5_MPI.py"
 
 export RANK=0
 export WORLD_SIZE=1
+export MASTER_PORT=$RANDOM
 export HYDRA_FULL_ERROR=1
 export HDF5_USE_FILE_LOCKING=FALSE
 export NCCL_NET_GDR_LEVEL=PHB
