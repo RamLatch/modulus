@@ -78,8 +78,8 @@ def drop_path(
     if REPLICATE:
         dumps +=1
         pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_drop_path.pkl", "wb"))
-        try:    print("drop_path x:",x.detach().cpu().numpy())
-        except: print("drop_path x:",x)
+        # try:    print("drop_path x:",x.detach().cpu().numpy())
+        # except: print("drop_path x:",x)
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1.0 - drop_prob
@@ -92,8 +92,8 @@ def drop_path(
     if REPLICATE:
         # dumps +=1
         pickle.dump(output, open(f"{debugpath}/{dumps:03d}_mpi_drop_path_output.pkl", "wb"))
-        try:    print("drop_path output:",output.detach().cpu().numpy())
-        except: print("drop_path output:",output)
+        # try:    print("drop_path output:",output.detach().cpu().numpy())
+        # except: print("drop_path output:",output)
     return output
 
 class DropPath(nn.Module):
@@ -175,8 +175,8 @@ class DistributedMLP(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp.pkl", "wb"))
-            try:   print("DistributedMLP x:",x.detach().cpu().numpy())
-            except:print("DistributedMLP x:",x)
+            # try:   print("DistributedMLP x:",x.detach().cpu().numpy())
+            # except:print("DistributedMLP x:",x)
         if self.input_is_matmul_parallel:
             x = gather_from_parallel_region(
                 x, dim=1, shapes=self.gather_shapes
@@ -184,57 +184,57 @@ class DistributedMLP(nn.Module):
             if REPLICATE:
                 dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_gather.pkl", "wb"))
-                try:    print("DistributedMLP x after gather if inputMatMulParallel:",x.detach().cpu().numpy())
-                except: print("DistributedMLP x after gather if inputMatMulParallel:",x)
+                # try:    print("DistributedMLP x after gather if inputMatMulParallel:",x.detach().cpu().numpy())
+                # except: print("DistributedMLP x after gather if inputMatMulParallel:",x)
 
         x = copy_to_parallel_region(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_copy_to_parallel_region.pkl", "wb"))
-            try:    print("DistributedMLP x after copy_to_parallel_region:",x.detach().cpu().numpy())
-            except: print("DistributedMLP x after copy_to_parallel_region:",x)
+            # try:    print("DistributedMLP x after copy_to_parallel_region:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP x after copy_to_parallel_region:",x)
         x = F.conv2d(x, self.w1, bias=self.b1)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_conv2d.pkl", "wb"))
-            try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
-            except: print("DistributedMLP conf2d:",x)
+            # try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP conf2d:",x)
         x = self.act(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_act.pkl", "wb"))
-            try:    print("DistributedMLP act:",x.detach().cpu().numpy())
-            except: print("DistributedMLP act:",x)
+            # try:    print("DistributedMLP act:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP act:",x)
         x = self.drop(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_drop.pkl", "wb"))
-            try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
-            except: print("DistributedMLP drop:",x)
+            # try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP drop:",x)
         x = F.conv2d(x, self.w2, bias=None)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_conv2d2.pkl", "wb"))
-            try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
-            except: print("DistributedMLP conf2d:",x)
+            # try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP conf2d:",x)
         x = reduce_from_parallel_region(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_reduce_from_parallel_region.pkl", "wb"))
-            try:    print("DistributedMLP x after reduce_from_parallel_region:",x.detach().cpu().numpy())
-            except: print("DistributedMLP x after reduce_from_parallel_region:",x)
+            # try:    print("DistributedMLP x after reduce_from_parallel_region:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP x after reduce_from_parallel_region:",x)
         x = x + torch.reshape(self.b2, (1, -1, 1, 1))
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_b2.pkl", "wb"))
-            try:    print("DistributedMLP x after reshape:",x.detach().cpu().numpy())
-            except: print("DistributedMLP x after reshape:",x)
+            # try:    print("DistributedMLP x after reshape:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP x after reshape:",x)
         x = self.drop(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_drop2.pkl", "wb"))
-            try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
-            except: print("DistributedMLP drop:",x)
+            # try:    print("DistributedMLP drop:",x.detach().cpu().numpy())
+            # except: print("DistributedMLP drop:",x)
 
         # scatter if output is MP
         if self.output_is_matmul_parallel:
@@ -242,8 +242,8 @@ class DistributedMLP(nn.Module):
             if REPLICATE:
                 dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_scatter_to_parallel_region.pkl", "wb"))
-                try:    print("DistributedMLP x after scatter if outMatMul:",x.detach().cpu().numpy())
-                except: print("DistributedMLP x after scatter if outMatMul:",x)
+                # try:    print("DistributedMLP x after scatter if outMatMul:",x.detach().cpu().numpy())
+                # except: print("DistributedMLP x after scatter if outMatMul:",x)
 
         return x
 
@@ -318,8 +318,8 @@ class DistributedPatchEmbed(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_Input.pkl", "wb"))
-            try:    print("DistributedPatchEmbed x:",x.detach().cpu().numpy())
-            except: print("DistributedPatchEmbed x:",x)
+            # try:    print("DistributedPatchEmbed x:",x.detach().cpu().numpy())
+            # except: print("DistributedPatchEmbed x:",x)
         if self.input_parallel:
             x = gather_from_parallel_region(
                 x, dim=1, shapes=self.in_shapes
@@ -327,16 +327,16 @@ class DistributedPatchEmbed(nn.Module):
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_gather.pkl", "wb"))
-                try:    print("DistributedPatchEmbed x after gather if input_parallel:",x.detach().cpu().numpy())
-                except: print("DistributedPatchEmbed x after gather if input_parallel:",x)
+                # try:    print("DistributedPatchEmbed x after gather if input_parallel:",x.detach().cpu().numpy())
+                # except: print("DistributedPatchEmbed x after gather if input_parallel:",x)
 
         if self.output_parallel:
             x = copy_to_parallel_region(x)
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_copy_to_parallel_region.pkl", "wb"))
-                try:    print("DistributedPatchEmbed x after copy_to_parallel_region:",x.detach().cpu().numpy())
-                except: print("DistributedPatchEmbed x after copy_to_parallel_region:",x)
+                # try:    print("DistributedPatchEmbed x after copy_to_parallel_region:",x.detach().cpu().numpy())
+                # except: print("DistributedPatchEmbed x after copy_to_parallel_region:",x)
 
         B, C, H, W = x.shape
         if not (H == self.inp_shape[0] and W == self.inp_shape[1]):
@@ -349,8 +349,8 @@ class DistributedPatchEmbed(nn.Module):
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_return.pkl", "wb"))
-            try:    print("DistributedPatchEmbed return:",x.detach().cpu().numpy())
-            except: print("DistributedPatchEmbed return:",x)
+            # try:    print("DistributedPatchEmbed return:",x.detach().cpu().numpy())
+            # except: print("DistributedPatchEmbed return:",x)
         return x
 
 
@@ -473,8 +473,8 @@ class DistributedAFNO2D(nn.Module):
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_Input.pkl", "wb"))
-            try:    print("DistributedAFNO2D x:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x:",x)
+            # try:    print("DistributedAFNO2D x:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x:",x)
         if not self.input_is_matmul_parallel:
             # distribute data
             num_chans = x.shape[1]
@@ -482,8 +482,8 @@ class DistributedAFNO2D(nn.Module):
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_scatter_to_parallel_region.pkl", "wb"))
-                try:    print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
-                except: print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x)
+                # try:    print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
+                # except: print("DistributedAFNO2D x after scatter if not inputMatMulParallel:",x)
 
         # bias
         bias = x
@@ -493,8 +493,8 @@ class DistributedAFNO2D(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_float.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after float:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after float:",x)
+            # try:    print("DistributedAFNO2D x after float:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after float:",x)
         B, C, H, W = x.shape
         total_modes = H // 2 + 1
         kept_modes = int(total_modes * self.hard_thresholding_fraction)
@@ -503,14 +503,14 @@ class DistributedAFNO2D(nn.Module):
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_fft_handle.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after fft_handle:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after fft_handle:",x)
+            # try:    print("DistributedAFNO2D x after fft_handle:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after fft_handle:",x)
         x = x.view(B, self.num_blocks_local, self.block_size, H, W // 2 + 1)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_view.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after view:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after view:",x)
+            # try:    print("DistributedAFNO2D x after view:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after view:",x)
 
         # new
         x = torch.view_as_real(x)
@@ -534,37 +534,37 @@ class DistributedAFNO2D(nn.Module):
         if REPLICATE:
             # dumps +=1
             pickle.dump(o1, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_o1.pkl", "wb"))
-            try:    print("DistributedAFNO2D o1:",o1.detach().cpu().numpy())
-            except: print("DistributedAFNO2D o1:",o1)
+            # try:    print("DistributedAFNO2D o1:",o1.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D o1:",o1)
         o2[
             :, :, :, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, :
         ] = self.mult_handle(o1, self.w2, self.b2)
         if REPLICATE:
             # dumps +=1
             pickle.dump(o2, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_o2.pkl", "wb"))
-            try:    print("DistributedAFNO2D o2:",o2.detach().cpu().numpy())
-            except: print("DistributedAFNO2D o2:",o2)
+            # try:    print("DistributedAFNO2D o2:",o2.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D o2:",o2)
         # finalize
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
         x = torch.view_as_complex(x)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_softshrink.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after softshrink:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after softshrink:",x)
+            # try:    print("DistributedAFNO2D x after softshrink:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after softshrink:",x)
         x = x.reshape(B, C, H, W // 2 + 1)
         x = self.ifft_handle(x, (H, W), (-2, -1), "ortho")
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_ifft_handle.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after ifft_handle:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after ifft_handle:",x)
+            # try:    print("DistributedAFNO2D x after ifft_handle:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after ifft_handle:",x)
         x = x.type(dtype) + bias
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_type.pkl", "wb"))
-            try:    print("DistributedAFNO2D x after type:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D x after type:",x)
+            # try:    print("DistributedAFNO2D x after type:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D x after type:",x)
 
         # gather
         if not self.output_is_matmul_parallel:
@@ -577,13 +577,13 @@ class DistributedAFNO2D(nn.Module):
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_gather_from_parallel_region.pkl", "wb"))
-                try:    print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
-                except: print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x)
+                # try:    print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
+                # except: print("DistributedAFNO2D x after gather if not outputMatMulParallel:",x)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_return.pkl", "wb"))
-            try:    print("DistributedAFNO2D return:",x.detach().cpu().numpy())
-            except: print("DistributedAFNO2D return:",x)
+            # try:    print("DistributedAFNO2D return:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNO2D return:",x)
         return x
 
 class DistributedBlock(nn.Module):
@@ -648,8 +648,8 @@ class DistributedBlock(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}_Input.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} x:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} x:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} x:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} x:",x)
         scatter_shapes = compute_split_shapes(
                 x.shape[1], comm.Get_size()
             )
@@ -659,22 +659,22 @@ class DistributedBlock(nn.Module):
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}scatter_to_parallel_region.pkl", "wb"))
-                try:    print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
-                except: print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x)
+                # try:    print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x.detach().cpu().numpy())
+                # except: print(f"DistributedBlock {BLOCK_DEBUG} x after scatter if not inputMatMulParallel:",x)
 
         residual = x
         x = self.norm1(x)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}norm1.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} norm1:",x)
         x = self.filter(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}filter.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} filter:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} filter:",x)
 
         if self.double_skip:
             x = x + residual
@@ -682,33 +682,33 @@ class DistributedBlock(nn.Module):
             if REPLICATE:
                 dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}double_skip.pkl", "wb"))
-                try:    print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x.detach().cpu().numpy())
-                except: print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x)
+                # try:    print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x.detach().cpu().numpy())
+                # except: print(f"DistributedBlock {BLOCK_DEBUG} double_skip:",x)
 
         x = self.norm2(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}norm2.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} norm2:",x)
         x = self.mlp(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}mlp.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} mlp:",x)
         x = self.drop_path(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}drop_path.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} drop_path:",x)
         x = x + residual
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}residual.pkl", "wb"))
-            try:    print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x.detach().cpu().numpy())
-            except: print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x)
+            # try:    print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x.detach().cpu().numpy())
+            # except: print(f"DistributedBlock {BLOCK_DEBUG} x after residual:",x)
 
         if not self.output_is_matmul_parallel:
             x = gather_from_parallel_region(
@@ -717,8 +717,8 @@ class DistributedBlock(nn.Module):
             if REPLICATE:
                 dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}gather_from_parallel_region.pkl", "wb"))
-                try:    print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
-                except: print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x)
+                # try:    print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
+                # except: print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x)
 
         return x
 
@@ -843,36 +843,36 @@ class DistributedAFNONet(nn.Module):
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_forward_features_input.pkl", "wb"))
-            try:    print("DistributedAFNONet forward_features x:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet forward_features x:",x)
+            # try:    print("DistributedAFNONet forward_features x:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet forward_features x:",x)
         B = x.shape[0]
 
         x = self.patch_embed(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_patch_embed.pkl", "wb"))
-            try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet patch_embed:",x)
+            # try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet patch_embed:",x)
         x = x + self.pos_embed
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_embed.pkl", "wb"))
-            try:    print("DistributedAFNONet pos_embed:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet pos_embed:",x)
+            # try:    print("DistributedAFNONet pos_embed:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet pos_embed:",x)
         x = self.pos_drop(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_drop.pkl", "wb"))
-            try:    print("DistributedAFNONet pos_drop:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet pos_drop:",x)
+            # try:    print("DistributedAFNONet pos_drop:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet pos_drop:",x)
 
         # reshape
         x = x.reshape(B, self.embed_dim_local, self.h, self.w)
         if REPLICATE:
             # dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_reshape.pkl", "wb"))
-            try:    print("DistributedAFNONet x after reshape:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet x after reshape:",x)
+            # try:    print("DistributedAFNONet x after reshape:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet x after reshape:",x)
 
         for blk in self.blocks:
             x = blk(x)
@@ -880,8 +880,8 @@ class DistributedAFNONet(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_blocks.pkl", "wb"))
-            try:    print("DistributedAFNONet forward_features return x:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet forward_features return x:",x)
+            # try:    print("DistributedAFNONet forward_features return x:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet forward_features return x:",x)
         return x
 
     def forward(self, x):
@@ -889,23 +889,23 @@ class DistributedAFNONet(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_Input.pkl", "wb"))
-            try:    print("DistributedAFNONet x:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet x:",x)
+            # try:    print("DistributedAFNONet x:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet x:",x)
         # fw pass 
         x = self.forward_features(x)
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_forward_features.pkl", "wb"))
-            try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
+            # try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
         # be careful if head is distributed
         if self.output_is_matmul_parallel:
             x = copy_to_parallel_region(x)
             if REPLICATE:
                 # dumps +=1
                 pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_copy_to_parallel_region.pkl", "wb"))
-                try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
-                except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
+                # try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
+                # except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
         else:
             if not self.synchronized_head:
                 # If output is not model parallel, synchronize all GPUs params for head
@@ -919,8 +919,8 @@ class DistributedAFNONet(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_head.pkl", "wb"))
-            try:    print("DistributedAFNONet head:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet head:",x)
+            # try:    print("DistributedAFNONet head:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet head:",x)
 
         # new: B, C, H, W
         b = x.shape[0]
@@ -932,8 +932,8 @@ class DistributedAFNONet(nn.Module):
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_return.pkl", "wb"))
-            try:    print("DistributedAFNONet return:",x.detach().cpu().numpy())
-            except: print("DistributedAFNONet return:",x)
+            # try:    print("DistributedAFNONet return:",x.detach().cpu().numpy())
+            # except: print("DistributedAFNONet return:",x)
         if REPLICATE: exit(1)
         return x
 
