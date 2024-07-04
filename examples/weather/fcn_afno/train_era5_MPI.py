@@ -118,9 +118,9 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-    LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK']) or None
-    WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE']) or None
-    WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK']) or None
+    LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+    WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
     print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
     if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
         import torch.distributed as dist
