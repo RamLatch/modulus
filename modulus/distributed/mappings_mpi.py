@@ -16,6 +16,7 @@
 
 import torch
 from mpi4py import MPI
+import torch.distributed
 
 from modulus.distributed.utils_mpi import (
     #_reduce_torch as _reduce,
@@ -25,6 +26,11 @@ from modulus.distributed.utils_mpi import (
     all_gather_v_wrapper,
     compute_split_shapes,
 )
+if torch.distributed.is_initialized():
+    from modulus.distributed.utils_mpi import (
+        _reduce_torch as _reduce,
+        all_gather_v_wrapper_torch as all_gather_v_wrapper,
+    )
 
 comm = MPI.COMM_WORLD
 

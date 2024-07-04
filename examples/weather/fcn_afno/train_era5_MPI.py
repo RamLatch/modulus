@@ -44,10 +44,16 @@ from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
-# import torch.distributed as dist
-
-comm = MPI.COMM_WORLD
-# dist.init_process_group()
+import os
+LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+if WORLD_RANK and WORLD_SIZE and LOCAL_RANK:
+    import torch.distributed as dist
+    dist.init_process_group(group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
+    print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
+else:   
+    comm = MPI.COMM_WORLD
 
 def loss_func(x, y, p=2.0):
     yv = y.reshape(x.size()[0], -1)
@@ -120,9 +126,14 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-
-    rank = comm.Get_rank()
-    world_size = comm.Get_size()
+    if not WORLD_SIZE and not LOCAL_RANK and not WORLD_RANK:
+        rank = comm.Get_rank()
+        world_size = comm.Get_size()
+        local_rank = rank
+    else:
+        rank = WORLD_RANK
+        world_size = WORLD_SIZE
+        local_rank = LOCAL_RANK
 
     datapipe = ERA5HDF5Datapipe(
         data_dir=to_absolute_path(cfg.train_dir),
@@ -133,7 +144,7 @@ def main(cfg: DictConfig) -> None:
         batch_size=cfg.batch_size_train,
         patch_size=(8, 8),
         num_workers=cfg.num_workers_train,
-        device=torch.device("cuda"),
+        device=torch.device("cuda:{}".format(local_rank) if torch.cuda.is_available() else 'cpu'),
         process_rank=rank,
         world_size=world_size,
     )
@@ -148,7 +159,7 @@ def main(cfg: DictConfig) -> None:
             num_samples_per_year=cfg.num_samples_per_year_validation,
             batch_size=cfg.batch_size_validation,
             patch_size=(8, 8),
-            device=torch.device("cuda"),
+            device=torch.device("cuda:{}".format(local_rank) if torch.cuda.is_available() else 'cpu'),
             num_workers=cfg.num_workers_validation,
             shuffle=False,
         )
@@ -162,7 +173,7 @@ def main(cfg: DictConfig) -> None:
         embed_dim=768,
         depth=12,
         num_blocks=8,
-    ).to(torch.device("cuda"))
+    ).to(torch.device("cuda:{}".format(local_rank) if torch.cuda.is_available() else 'cpu'))
 
     if rank == 0 and wandb.run is not None:
         wandb.watch(
@@ -176,7 +187,7 @@ def main(cfg: DictConfig) -> None:
     #         fcn_model = DistributedDataParallel(
     #             fcn_model,
     #             device_ids=[rank%4],
-    #             output_device=torch.device("cuda"),
+    #             output_device=torch.device("cuda:{}".format(local_rank)),
     #         )
     #     torch.cuda.current_stream().wait_stream(ddps)
 
@@ -190,7 +201,7 @@ def main(cfg: DictConfig) -> None:
         models=fcn_model,
         optimizer=optimizer,
         scheduler=scheduler,
-        device=torch.device("cuda"),
+        device=torch.device("cuda:{}".format(local_rank)  if torch.cuda.is_available() else 'cpu'),
     )
     # loaded_epoch = 0
 
@@ -234,7 +245,7 @@ def main(cfg: DictConfig) -> None:
                 log.log_epoch({"Validation error": error})
 
         if world_size > 1:
-            comm.barrier()
+            comm.barrier() if not dist.is_initialized() else dist.barrier("model_parallel")
 
         scheduler.step()
 

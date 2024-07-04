@@ -28,7 +28,7 @@ if REPLICATE:
     torch.backends.cudnn.benchmark = False
     torch.set_printoptions(threshold=10_000)
 
-import logging
+import logging, os
 from functools import partial
 from typing import Any, Tuple, Union
 
@@ -37,6 +37,7 @@ import warnings
 import torch
 
 
+import torch.distributed
 import torch.nn.functional as F
 from dataclasses import dataclass
 from modulus.models.meta import ModelMetaData
@@ -55,7 +56,13 @@ from modulus.distributed.mappings_mpi import (
 )
 from modulus.distributed.utils_mpi import compute_split_shapes, get_memory_format
 # distributed stuff
+dist = torch.distributed
+LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
 comm = MPI.COMM_WORLD
+rank = comm.Get_rank() if not dist.is_initialized() else dist.get_rank("model_parallel")
+world_size = comm.Get_size() if not dist.is_initialized() else dist.get_world_size("model_parallel")
 
 BLOCK_DEBUG = 0
 logger = logging.getLogger(__name__)
@@ -137,7 +144,7 @@ class DistributedMLP(nn.Module):
         self.output_is_matmul_parallel = output_is_matmul_parallel
 
         # get effective embedding size:
-        comm_size = comm.Get_size()
+        comm_size = world_size
         if not (hidden_features % comm_size == 0):
             raise ValueError(
                 "Error, hidden_features needs to be divisible by matmul_parallel_size"
@@ -157,7 +164,7 @@ class DistributedMLP(nn.Module):
 
         if self.input_is_matmul_parallel:
             self.gather_shapes = compute_split_shapes(
-                in_features, comm.Get_size()
+                in_features, world_size
             )
 
         # init weights
@@ -269,7 +276,7 @@ class DistributedPatchEmbed(nn.Module):
         self.output_parallel = output_is_matmul_parallel
 
         # get comm sizes:
-        matmul_comm_size = comm.Get_size()
+        matmul_comm_size = world_size
 
         # compute parameters
         # print("inp_shape", inp_shape.detach().cpu().numpy())
@@ -285,7 +292,7 @@ class DistributedPatchEmbed(nn.Module):
                     "Error, the in_chans needs to be divisible by matmul_parallel_size"
                 )
             self.in_shapes = compute_split_shapes(
-                in_chans, comm.Get_size()
+                in_chans, world_size
             )
 
         # get effective embedding size:
@@ -399,7 +406,7 @@ class DistributedAFNO2D(nn.Module):
             )
 
         # get comm sizes:
-        matmul_comm_size = comm.Get_size()
+        matmul_comm_size = world_size
 
         self.fft_handle = torch.fft.rfft2
         self.ifft_handle = torch.fft.irfft2
@@ -566,7 +573,7 @@ class DistributedAFNO2D(nn.Module):
         # gather
         if not self.output_is_matmul_parallel:
             gather_shapes = compute_split_shapes(
-                num_chans, comm.Get_size()
+                num_chans, world_size
             )
             x = gather_from_parallel_region(
                 x, dim=1, shapes=gather_shapes
@@ -648,7 +655,7 @@ class DistributedBlock(nn.Module):
             # try:    print(f"DistributedBlock {BLOCK_DEBUG} x:",x.detach().cpu().numpy())
             # except: print(f"DistributedBlock {BLOCK_DEBUG} x:",x)
         scatter_shapes = compute_split_shapes(
-                x.shape[1], comm.Get_size()
+                x.shape[1], world_size
             )
         if not self.input_is_matmul_parallel:
             
@@ -745,7 +752,7 @@ class DistributedAFNONet(nn.Module):
         super().__init__()
 
         # comm sizes
-        matmul_comm_size = comm.Get_size()
+        matmul_comm_size = world_size
 
         self.inp_shape = inp_shape
         self.patch_size = patch_size
@@ -908,7 +915,7 @@ class DistributedAFNONet(nn.Module):
                 # If output is not model parallel, synchronize all GPUs params for head
                 for param in self.head.parameters():
                     param_data = param.data.cpu().numpy()
-                    comm.Bcast(param_data, root=0)
+                    comm.Bcast(param_data, root=0) if not dist.is_initialized() else dist.broadcast(param_data, 0, "model_parallel")
                     param.data = torch.from_numpy(param_data).to(param.device)
                 self.synchronized_head = True
 
@@ -1015,7 +1022,7 @@ class DistributedAFNOMPI(modulus.Module):
 
         
 
-        comm_size = comm.Get_size()
+        comm_size = world_size
         if channel_parallel_inputs:
             if not (in_channels % comm_size == 0):
                 raise ValueError(

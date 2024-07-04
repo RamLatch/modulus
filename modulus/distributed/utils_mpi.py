@@ -189,17 +189,17 @@ def distributed_transpose(tensor, dim0, dim1, async_op=False):
 def _reduce_torch(input_, use_fp32=True):
     """All-reduce the input tensor across model parallel group using torch.distributed."""
     # Bypass the function if we are using only 1 GPU.
-    if dist.get_world_size() == 1:
+    if dist.get_world_size("model_parallel") == 1:
         return input_
     
     # All-reduce, use_fp32 only relevant for lower precisions
     if use_fp32 and (input_.dtype.itemsize < 4) and input_.dtype.is_floating_point:
         dtype = input_.dtype
         inputf_ = input_.float()
-        dist.all_reduce(inputf_, op=dist.ReduceOp.SUM)
+        dist.all_reduce(inputf_, op=dist.ReduceOp.SUM,group="model_parallel")
         input_ = inputf_.to(dtype)
     else:
-        dist.all_reduce(input_, op=dist.ReduceOp.SUM)
+        dist.all_reduce(input_, op=dist.ReduceOp.SUM,group="model_parallel")
 
     return input_
 
@@ -269,7 +269,7 @@ def all_gather_v_wrapper_torch(
         torch.Tensor
             Full global tensor, valid on each rank
         """
-        world_size = dist.get_world_size()
+        world_size = dist.get_world_size("model_parallel")
 
         if (sizes is not None) and (len(sizes) != world_size):
             raise ValueError("Sizes list length must be equal to the world size")
@@ -298,7 +298,7 @@ def all_gather_v_wrapper_torch(
         send_data = tensor.flatten()
 
         # Perform AllGatherV operation
-        dist.all_gather(tensor_list=[recv_buf], tensor=send_data, sizes=sizes, dim=dim)
+        dist.all_gather(tensor_list=[recv_buf], tensor=send_data, sizes=sizes, dim=dim, group="model_parallel")
 
         # Reconstruct the global tensor
         global_tensor = recv_buf.view(-1, *tensor.size()[1:]).to(tensor.device)
