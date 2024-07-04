@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-REPLICATE = False
+REPLICATE = True
 if REPLICATE:
     import random
     import numpy as np
@@ -435,6 +435,8 @@ class PatchEmbed(nn.Module):
                 self.proj = nn.Conv2d(
                     in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
                 )
+                print("self.proj.weight",self.proj.weight)
+                print("self.proj.bias",self.proj.bias)
                 pickle.dump(self.proj, open(f"{debugpath}/Conv2d.pkl", "wb"))
         else:
             self.proj = nn.Conv2d(

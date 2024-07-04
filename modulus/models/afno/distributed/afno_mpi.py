@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-REPLICATE = False
+REPLICATE = True
 if REPLICATE:
     import random
     import numpy as np
@@ -311,6 +311,8 @@ class DistributedPatchEmbed(nn.Module):
         self.proj = nn.Conv2d(
                 in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
         )
+        print("self.proj.weight",self.proj.weight)
+        print("self.proj.bias",self.proj.bias)
 
         # make sure we reduce them across rank
         self.proj.weight.is_shared_spatial = True
