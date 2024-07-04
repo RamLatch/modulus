@@ -124,7 +124,7 @@ def main(cfg: DictConfig) -> None:
     print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
     if WORLD_RANK and WORLD_SIZE and LOCAL_RANK:
         import torch.distributed as dist
-        dist.init_process_group(group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
+        dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
         print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
     else: comm = MPI.COMM_WORLD
     if not WORLD_SIZE and not LOCAL_RANK and not WORLD_RANK:
