@@ -45,15 +45,7 @@ from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
 import os
-LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
-WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
-if WORLD_RANK and WORLD_SIZE and LOCAL_RANK and __name__ == "__main__":
-    import torch.distributed as dist
-    dist.init_process_group(group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
-    print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
-elif __name__ == "__main__":   
-    comm = MPI.COMM_WORLD
+
 
 def loss_func(x, y, p=2.0):
     yv = y.reshape(x.size()[0], -1)
@@ -126,6 +118,15 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
+    LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+    WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+    print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
+    if WORLD_RANK and WORLD_SIZE and LOCAL_RANK:
+        import torch.distributed as dist
+        dist.init_process_group(group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
+        print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
+    else: comm = MPI.COMM_WORLD
     if not WORLD_SIZE and not LOCAL_RANK and not WORLD_RANK:
         rank = comm.Get_rank()
         world_size = comm.Get_size()
