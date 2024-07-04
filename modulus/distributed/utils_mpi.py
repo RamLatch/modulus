@@ -25,7 +25,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 
-comm = MPI.COMM_WORLD
+
 
 def compute_split_shapes(size: int, num_chunks: int) -> List[int]:
     # treat trivial case first
@@ -134,6 +134,7 @@ def reduce_loss(loss: float, dst_rank: int = 0, mean: bool = True):  # pragma: n
         raise Exception(
             "MPI should be initialized when using reduce_loss"
         )
+    comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
 
@@ -171,6 +172,7 @@ def distributed_transpose(tensor, dim0, dim1, async_op=False):
     input_format = get_memory_format(tensor)
 
     # get comm params
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
 
     # split and local transposition
@@ -207,6 +209,7 @@ def _reduce(input_, use_fp32=True):  # pragma: no cover
     """All-reduce the input tensor across model parallel group."""
 
     # Bypass the function if we are using only 1 GPU.
+    comm = MPI.COMM_WORLD
     if comm.Get_size() == 1:
         return input_
     comm.Allreduce(MPI.IN_PLACE, input_, op=MPI.SUM)
@@ -230,6 +233,7 @@ def _split(input_, dim_):  # pragma: no cover
     input_format = get_memory_format(input_)
 
     # Bypass the function if we are using only 1 GPU.
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     if comm_size == 1:
         return input_
@@ -335,7 +339,7 @@ def all_gather_v_wrapper(
     torch.Tensor
         full global tensor, valid on each rank
     """
-
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
 
     if (sizes is not None) and (len(sizes) != comm_size):
@@ -433,7 +437,7 @@ def all_gather_v_bwd_wrapper(
         local tensor, i.e. result of reduction of all corresponding chunks
         from all global tensors for each rank separately
     """
-
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     rank = comm.Get_rank()
 
@@ -529,7 +533,7 @@ def gather_v_wrapper(
     torch.Tensor
         full global tensor, valid on destination rank
     """
-
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     rank = comm.Get_rank()
     if len(sizes) != comm_size:
@@ -650,6 +654,7 @@ def scatter_v_wrapper(
     torch.Tensor
         corresponding local part of the global tensor on each rank
     """
+    comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     rank = comm.Get_rank()
 
@@ -748,6 +753,7 @@ def indexed_all_to_all_v_wrapper(
     torch.Tensor
         local result of primitive corresponding to indexed global tensor
     """
+    comm = MPI.COMM_WORLD
 
     comm_size = comm.Get_size()
     rank = comm.Get_rank()
@@ -842,6 +848,7 @@ def indexed_all_to_all_v_wrapper_bwd(
     torch.Tensor
         result of primitive corresponding to indexed global tensor
     """
+    comm = MPI.COMM_WORLD
 
     comm_size = comm.Get_size()
     rank = comm.Get_rank()

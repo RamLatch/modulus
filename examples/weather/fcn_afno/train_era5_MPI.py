@@ -48,11 +48,11 @@ import os
 LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
 WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
 WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
-if WORLD_RANK and WORLD_SIZE and LOCAL_RANK:
+if WORLD_RANK and WORLD_SIZE and LOCAL_RANK and __name__ == "__main__":
     import torch.distributed as dist
     dist.init_process_group(group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
     print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
-else:   
+elif __name__ == "__main__":   
     comm = MPI.COMM_WORLD
 
 def loss_func(x, y, p=2.0):
@@ -173,6 +173,7 @@ def main(cfg: DictConfig) -> None:
         embed_dim=768,
         depth=12,
         num_blocks=8,
+        comm=comm or None
     ).to(torch.device("cuda" if torch.cuda.is_available() else 'cpu'))
 
     if rank == 0 and wandb.run is not None:

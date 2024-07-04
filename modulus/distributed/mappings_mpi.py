@@ -32,7 +32,7 @@ if torch.distributed.is_initialized():
         all_gather_v_wrapper_torch as all_gather_v_wrapper,
     )
 
-comm = MPI.COMM_WORLD
+
 
 class _CopyToParallelRegion(torch.autograd.Function):
     """Pass the input to the parallel region"""
@@ -75,6 +75,7 @@ class _ScatterToParallelRegion(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, input_, dim_):  # pragma: no cover
+        comm = MPI.COMM_WORLD
         ctx.dim = dim_
         ctx.split_shapes = compute_split_shapes(
             input_.shape[dim_], comm.Get_size()
