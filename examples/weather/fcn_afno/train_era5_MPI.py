@@ -127,7 +127,7 @@ def main(cfg: DictConfig) -> None:
         dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
         print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
     else: comm = MPI.COMM_WORLD
-    if not WORLD_SIZE is None and not LOCAL_RANK is None and not WORLD_RANK is None:
+    if WORLD_SIZE is None or LOCAL_RANK is None or WORLD_RANK is None:
         rank = comm.Get_rank()
         world_size = comm.Get_size()
         local_rank = rank
@@ -146,7 +146,7 @@ def main(cfg: DictConfig) -> None:
         patch_size=(8, 8),
         num_workers=cfg.num_workers_train,
         device=torch.device("cuda" if torch.cuda.is_available() else 'cpu'),
-        process_rank=rank,
+        process_rank=rank or local_rank,
         world_size=world_size,
     )
     logger.success(f"Loaded datapipe of size {len(datapipe)}")
