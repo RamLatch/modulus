@@ -118,16 +118,16 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-    LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
-    WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-    WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+    LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK']) or None
+    WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE']) or None
+    WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK']) or None
     print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
-    if WORLD_RANK and WORLD_SIZE and LOCAL_RANK:
+    if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
         import torch.distributed as dist
         dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
         print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
     else: comm = MPI.COMM_WORLD
-    if not WORLD_SIZE and not LOCAL_RANK and not WORLD_RANK:
+    if not WORLD_SIZE is None and not LOCAL_RANK is None and not WORLD_RANK is None:
         rank = comm.Get_rank()
         world_size = comm.Get_size()
         local_rank = rank
