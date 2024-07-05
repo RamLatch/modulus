@@ -269,8 +269,8 @@ class DistributedPatchEmbed(nn.Module):
             np.random.seed(42)
             torch.manual_seed(42)
             torch.cuda.manual_seed(42)
-            torch.random.set_rng_state(torch.zeros(5048).byte())
-            torch.cuda.random.set_rng_state_all([torch.zeros(5048).byte(),torch.zeros(5048).byte()])
+            torch.random.set_rng_state(pickle.load(open(f"{debugpath}/torchrandomstate.pkl", "rb")))
+            torch.cuda.random.set_rng_state_all(pickle.load(open(f"{debugpath}/cudarandomstate.pkl", "rb")))
         super(DistributedPatchEmbed, self).__init__()
 
         # store params
