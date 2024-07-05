@@ -268,6 +268,9 @@ class DistributedPatchEmbed(nn.Module):
             random.seed(42)
             np.random.seed(42)
             torch.manual_seed(42)
+            torch.cuda.manual_seed(42)
+            torch.random.set_rng_state(torch.ones_like(10))
+            torch.cuda.random.set_rng_state_all(torch.ones_like(10))
         super(DistributedPatchEmbed, self).__init__()
 
         # store params
@@ -313,7 +316,9 @@ class DistributedPatchEmbed(nn.Module):
         )
         print("self.proj.weight",self.proj.weight)
         print("self.proj.bias",self.proj.bias)
-
+        if REPLICATE:
+            pickle.dump(self.proj.weight, open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "wb"))
+            pickle.dump(self.proj.bias, open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "wb"))
         # make sure we reduce them across rank
         self.proj.weight.is_shared_spatial = True
         self.proj.bias.is_shared_spatial = True

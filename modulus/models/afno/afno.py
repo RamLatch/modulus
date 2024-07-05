@@ -418,6 +418,10 @@ class PatchEmbed(nn.Module):
             random.seed(42)
             np.random.seed(42)
             torch.manual_seed(42)
+            torch.cuda.manual_seed(42)
+            torch.random.set_rng_state(torch.ones_like(10))
+            torch.cuda.random.set_rng_state_all(torch.ones_like(10))
+
         super().__init__()
         if len(inp_shape) != 2:
             raise ValueError("inp_shape should be a list of length 2")
@@ -429,15 +433,16 @@ class PatchEmbed(nn.Module):
         self.patch_size = patch_size
         self.num_patches = num_patches
         if REPLICATE:
-            if os.path.exists(f"{debugpath}/Conv2d.pkl"):
-                self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
-            else:
+            #if os.path.exists(f"{debugpath}/Conv2d.pkl"):
+            #    self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
+            #else:
                 self.proj = nn.Conv2d(
                     in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
                 )
                 print("self.proj.weight",self.proj.weight)
                 print("self.proj.bias",self.proj.bias)
-                pickle.dump(self.proj, open(f"{debugpath}/Conv2d.pkl", "wb"))
+                pickle.dump(self.proj.weight, open(f"{debugpath}/Patchembed_Conv2d_weight.pkl", "wb"))
+                pickle.dump(self.proj.bias, open(f"{debugpath}/Patchembed_Conv2d_bias.pkl", "wb"))
         else:
             self.proj = nn.Conv2d(
                 in_channels, embed_dim, kernel_size=patch_size, stride=patch_size

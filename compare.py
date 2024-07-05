@@ -21,7 +21,9 @@ tuples = [
     ("004_mpi_distributed_afnonet_pos_embed","004_AFNO_pos_embed"),
     ("005_mpi_distributed_afnonet_pos_drop","005_AFNO_pos_drop"),
     ("005_mpi_distributed_afnonet_reshape","005_AFNO_reshape"),
-    ("006_mpi_distributed_block_0_Input","006_Block_0_Input")
+    ("006_mpi_distributed_block_0_Input","006_Block_0_Input"),
+    ("DistPatchembed_Conv2d_weight","Patchembed_Conv2d_weight"),
+    ("DistPatchembed_Conv2d_bias","Patchembed_Conv2d_bias")
 
 ]
 
