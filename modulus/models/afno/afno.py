@@ -419,8 +419,8 @@ class PatchEmbed(nn.Module):
             np.random.seed(42)
             torch.manual_seed(42)
             torch.cuda.manual_seed(42)
-            torch.random.set_rng_state(torch.ones(10))
-            torch.cuda.random.set_rng_state_all(torch.ones(10))
+            torch.random.set_rng_state(torch.ones(10).byte())
+            torch.cuda.random.set_rng_state_all([torch.ones(10).byte(),torch.ones(10).byte()])
 
         super().__init__()
         if len(inp_shape) != 2:
