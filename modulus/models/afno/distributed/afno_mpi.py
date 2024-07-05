@@ -639,6 +639,7 @@ class DistributedBlock(nn.Module):
             hard_thresholding_fraction,
             input_is_matmul_parallel=True,
             output_is_matmul_parallel=True,
+            comm=comm
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
@@ -653,6 +654,7 @@ class DistributedBlock(nn.Module):
             drop=drop,
             input_is_matmul_parallel=True,
             output_is_matmul_parallel=True,
+            comm=comm
         )
         self.double_skip = double_skip
 
@@ -784,6 +786,7 @@ class DistributedAFNONet(nn.Module):
             embed_dim=embed_dim,
             input_is_matmul_parallel=self.input_is_matmul_parallel,
             output_is_matmul_parallel=True,
+            comm=comm,
         )
         num_patches = self.patch_embed.num_patches
 
