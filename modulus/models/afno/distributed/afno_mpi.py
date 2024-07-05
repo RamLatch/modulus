@@ -269,8 +269,8 @@ class DistributedPatchEmbed(nn.Module):
             np.random.seed(42)
             torch.manual_seed(42)
             torch.cuda.manual_seed(42)
-            torch.random.set_rng_state(torch.ones_like(10))
-            torch.cuda.random.set_rng_state_all(torch.ones_like(10))
+            torch.random.set_rng_state(torch.ones(10))
+            torch.cuda.random.set_rng_state_all(torch.ones(10))
         super(DistributedPatchEmbed, self).__init__()
 
         # store params
