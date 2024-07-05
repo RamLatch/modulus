@@ -462,6 +462,9 @@ class PatchEmbed(nn.Module):
             )
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
+            pickle.dump(self.proj.weight, open(f"{debugpath}/Patchembed_Conv2d_weight_after.pkl", "wb"))
+            pickle.dump(self.proj.bias, open(f"{debugpath}/Patchembed_Conv2d_bias_after.pkl", "wb"))
+        if REPLICATE:
             # dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_return.pkl", "wb"))
             # try:    print("PatchEmbed return:",x.detach().cpu().numpy())

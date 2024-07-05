@@ -25,8 +25,8 @@ tuples = [
     #("006_mpi_distributed_block_0_Input","006_Block_0_Input"),
     ("DistPatchembed_Conv2d_weight","Patchembed_Conv2d_weight"),
     ("DistPatchembed_Conv2d_bias","Patchembed_Conv2d_bias")
-
-]
+    ("DistPatchembed_Conv2d_weight_after","Patchembed_Conv2d_weight_after"),
+    ("DistPatchembed_Conv2d_bias_after","Patchembed_Conv2d_bias_after")]
 
 for t in tuples:
     compare(t[0],t[1])

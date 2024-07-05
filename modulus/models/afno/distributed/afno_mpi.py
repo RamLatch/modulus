@@ -355,6 +355,10 @@ class DistributedPatchEmbed(nn.Module):
             )
         # new: B, C, H*W
         x = self.proj(x).flatten(2)
+        
+        if REPLICATE:
+            pickle.dump(self.proj.weight, open(f"{debugpath}/DistPatchembed_Conv2d_weight_after.pkl", "wb"))
+            pickle.dump(self.proj.bias, open(f"{debugpath}/DistPatchembed_Conv2d_bias_after.pkl", "wb"))
         # x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             # dumps +=1
