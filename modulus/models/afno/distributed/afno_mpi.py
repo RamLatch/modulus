@@ -320,8 +320,8 @@ class DistributedPatchEmbed(nn.Module):
             pickle.dump(self.proj.weight, open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "wb"))
             pickle.dump(self.proj.bias, open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "wb"))
         # make sure we reduce them across rank
-        self.proj.weight.is_shared_spatial = True
-        self.proj.bias.is_shared_spatial = True
+        #self.proj.weight.is_shared_spatial = True
+        #self.proj.bias.is_shared_spatial = True
 
     def forward(self, x: Tensor):
         global dumps
