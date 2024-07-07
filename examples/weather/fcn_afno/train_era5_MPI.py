@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-REPLICATE = True
+REPLICATE = False
 if REPLICATE:
     import random
     import numpy as np
@@ -118,10 +118,12 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-    if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
-    if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-    if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
-    else: LOCAL_RANK = WORLD_SIZE = WORLD_RANK = None
+    try:
+        if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+        if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+        if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+    except:
+        LOCAL_RANK = WORLD_SIZE = WORLD_RANK = None
     print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
     if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
         import torch.distributed as dist
