@@ -12,8 +12,8 @@ def compare(name1,name2):
     print(name1,name2,"\n",mpi.shape,sgl.shape)
     try:print(torch.allclose(mpi.type_as(sgl), sgl,rtol=0.0015))
     except: 
-        try: print(torch.allclose(mpi.type_as(sgl).transpose(1,2),sgl))
-        except:print(torch.allclose(mpi.type_as(sgl),sgl))
+        try: print(torch.allclose(mpi.type_as(sgl).transpose(-2,-1),sgl))
+        except: print(torch.allclose(mpi.type_as(sgl),sgl))
 
 tuples = [
     #("001_mpi_distributed_afnonet_Input","001_AFNO_Input"),
