@@ -57,10 +57,12 @@ from modulus.distributed.mappings_mpi import (
 from modulus.distributed.utils_mpi import compute_split_shapes, get_memory_format
 # distributed stuff
 dist = torch.distributed
-if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
-if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
-
+try:
+    if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+    if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+except:
+    LOCAL_RANK, WORLD_SIZE, WORLD_RANK = None, None, None
 BLOCK_DEBUG = 0
 logger = logging.getLogger(__name__)
 dumps = 0
