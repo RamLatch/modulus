@@ -977,7 +977,7 @@ class DistributedAFNONet(nn.Module):
             # except: print("DistributedAFNONet return:",x)
         if REPLICATE: exit(1)
         from torchviz import make_dot
-        make_dot(x).render(f"{debugpath}/mpiTensorGraph")
+        make_dot(x).render(f"{debugpath}/mpiTensorGraph",format="png")
         exit(1)
         return x
 

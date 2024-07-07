@@ -711,4 +711,7 @@ class AFNO(Module):
             # try:    print("Afno return:",out.detach().cpu().numpy())
             # except: print("Afno return:",out)
         if REPLICATE: exit(1)
+        from torchviz import make_dot
+        make_dot(out).render(f"{debugpath}/sglTensorGraph",format="png")
+        exit(1)
         return out
