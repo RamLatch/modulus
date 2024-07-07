@@ -10,7 +10,7 @@ def compare(name1,name2):
     print(mpi)
     print(sgl)
     print(name1,name2,"\n",mpi.shape,sgl.shape)
-    try:print(torch.allclose(mpi.type_as(sgl), sgl),rtol=0.0015)
+    try:print(torch.allclose(mpi.type_as(sgl), sgl,rtol=0.0015))
     except: print(torch.eq(mpi.transpose(1,2),sgl))
 
 tuples = [
