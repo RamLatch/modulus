@@ -27,8 +27,10 @@ if REPLICATE:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.set_printoptions(threshold=10_000)
-
-
+PRINTGRAPH = True
+if PRINTGRAPH:
+    from torchviz import make_dot
+    GRAPHEPOCH = 0
 from dataclasses import dataclass
 from functools import partial
 import os
@@ -121,6 +123,8 @@ class AFNOMlp(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_drop2.pkl", "wb"))
             # try:    print("AFNOMlp return:",x.detach().cpu().numpy())
             # except: print("AFNOMlp return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglAFNOMlp", format="png")
         return x
 
 
@@ -278,7 +282,10 @@ class AFNO2DLayer(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_return.pkl", "wb"))
             # try:    print("AFNO2DLayer return:",x+bias.detach().cpu().numpy())
             # except: print("AFNO2DLayer return:",x+bias)
-        return x + bias
+        x = x + bias
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglAFNO2DLayer", format="png")
+        return x# + bias
 
 
 class Block(nn.Module):
@@ -387,6 +394,8 @@ class Block(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_return.pkl", "wb"))
             # try:    print(f"Block {BLOCK_DEBUG} return:",x.detach().cpu().numpy())
             # except: print(f"Block {BLOCK_DEBUG} return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0 and BLOCK_DEBUG == 0:
+            make_dot(x).render(f"{debugpath}/SglBlock_{BLOCK_DEBUG}", format="png")
         return x
 
 
@@ -472,6 +481,8 @@ class PatchEmbed(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_return.pkl", "wb"))
             # try:    print("PatchEmbed return:",x.detach().cpu().numpy())
             # except: print("PatchEmbed return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPatchEmbed", format="png")
         return x
 
 
@@ -644,18 +655,24 @@ class AFNO(Module):
         """Forward pass of core AFNO"""
         B = x.shape[0]
         x = self.patch_embed(x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPatchEmbed", format="png")
         if REPLICATE:
             dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_patch_embed.pkl", "wb"))
             # try:    print("Afno patch embed:",x.detach().cpu().numpy())
             # except: print("Afno patch embed:",x)
         x = x + self.pos_embed
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPosEmbed", format="png")
         if REPLICATE:
             dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_pos_embed.pkl", "wb"))
             # try:    print("Afno pos embed:",x.detach().cpu().numpy())
             # except: print("Afno pos embed:",x)
         x = self.pos_drop(x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPosDrop", format="png")
         if REPLICATE:
             dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_pos_drop.pkl", "wb"))
@@ -680,6 +697,7 @@ class AFNO(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         global dumps
+        global GRAPHEPOCH
         if REPLICATE:
             dumps += 1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_Input.pkl", "wb"))
@@ -711,7 +729,8 @@ class AFNO(Module):
             # try:    print("Afno return:",out.detach().cpu().numpy())
             # except: print("Afno return:",out)
         if REPLICATE: exit(1)
-        from torchviz import make_dot
-        make_dot(out).render(f"{debugpath}/sglTensorGraph",format="png")
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            GRAPHEPOCH = 1
+            make_dot(out).render(f"{debugpath}/SglTensorGraph",format="png")
         # exit(1)
         return out

@@ -27,7 +27,10 @@ if REPLICATE:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.set_printoptions(threshold=10_000)
-
+PRINTGRAPH = True
+if PRINTGRAPH:
+    from torchviz import make_dot
+    GRAPHEPOCH = 0
 import logging, os
 from functools import partial
 from typing import Any, Tuple, Union
@@ -255,7 +258,8 @@ class DistributedMLP(nn.Module):
                     pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_scatter_to_parallel_region.pkl", "wb"))
                     # try:    print("DistributedMLP x after scatter if outMatMul:",x.detach().cpu().numpy())
                     # except: print("DistributedMLP x after scatter if outMatMul:",x)
-
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/DistributedMLP", format="png")
         return x
 
 
@@ -376,6 +380,8 @@ class DistributedPatchEmbed(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_return.pkl", "wb"))
             # try:    print("DistributedPatchEmbed return:",x.detach().cpu().numpy())
             # except: print("DistributedPatchEmbed return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/DistributedPatchEmbed", format="png")
         return x
 
 
@@ -612,6 +618,8 @@ class DistributedAFNO2D(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_return.pkl", "wb"))
             # try:    print("DistributedAFNO2D return:",x.detach().cpu().numpy())
             # except: print("DistributedAFNO2D return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0 and BLOCK_DEBUG == 0:
+            make_dot(x).render(f"{debugpath}/DistributedAFNO2D", format="png")
         return x
 
 class DistributedBlock(nn.Module):
@@ -753,7 +761,8 @@ class DistributedBlock(nn.Module):
                     pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_block_{BLOCK_DEBUG}gather_from_parallel_region.pkl", "wb"))
                     # try:    print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x.detach().cpu().numpy())
                     # except: print(f"DistributedBlock {BLOCK_DEBUG} x after gather if not outputMatMulParallel:",x)
-
+        if PRINTGRAPH and GRAPHEPOCH == 0 and BLOCK_DEBUG == 0:
+            make_dot(x).render(f"{debugpath}/DistributedBlock", format="png")
         return x
 
 
@@ -888,18 +897,24 @@ class DistributedAFNONet(nn.Module):
         B = x.shape[0]
 
         x = self.patch_embed(x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/DistributedPatch", format="png")
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_patch_embed.pkl", "wb"))
             # try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet patch_embed:",x)
         x = x + self.pos_embed#.transpose(1, 2)
+        make_dot(x).render(f"{debugpath}/DistributedPose", format="png")
+
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_embed.pkl", "wb"))
             # try:    print("DistributedAFNONet pos_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet pos_embed:",x)
         x = self.pos_drop(x)
+        make_dot(x).render(f"{debugpath}/DistributedPoseDrop", format="png")
+
         if REPLICATE:
             dumps +=1
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afnonet_pos_drop.pkl", "wb"))
@@ -976,8 +991,10 @@ class DistributedAFNONet(nn.Module):
             # try:    print("DistributedAFNONet return:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet return:",x)
         if REPLICATE: exit(1)
-        from torchviz import make_dot
-        make_dot(x).render(f"{debugpath}/mpiTensorGraph",format="png")
+        global GRAPHEPOCH
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/DistributedFull",format="png")
+            GRAPHEPOCH = 1
         # exit(1)
         return x
 
