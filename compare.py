@@ -14,6 +14,7 @@ def compare(name1,name2):
     except: 
         try: print(torch.allclose(mpi.type_as(sgl).transpose(-2,-1),sgl))
         except: 
+            print(mpi.type_as(sgl).transpose(-2,-1).transpose(1,2).shape)
             try: print(torch.allclose(mpi.type_as(sgl).transpose(-2,-1).transpose(1,2),sgl))
             except: print(torch.allclose(mpi.type_as(sgl),sgl))
 
