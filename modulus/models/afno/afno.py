@@ -713,5 +713,5 @@ class AFNO(Module):
         if REPLICATE: exit(1)
         from torchviz import make_dot
         make_dot(out).render(f"{debugpath}/sglTensorGraph",format="png")
-        exit(1)
+        # exit(1)
         return out
