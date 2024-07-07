@@ -355,8 +355,8 @@ class DistributedPatchEmbed(nn.Module):
             )
         # new: B, C, H*W
         if REPLICATE:
-            self.proj.weight = pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "rb")).type_as(self.proj.weight)
-            self.proj.bias = pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "rb")).type_as(self.proj.bias)
+            self.proj.weight = nn.Parameter(pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "rb")).type_as(self.proj.weight))
+            self.proj.bias = nn.Parameter(pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "rb")).type_as(self.proj.bias))
         x = self.proj(x).flatten(2)
         
         if REPLICATE:
