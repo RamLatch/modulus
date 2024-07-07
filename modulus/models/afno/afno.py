@@ -460,6 +460,9 @@ class PatchEmbed(nn.Module):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
+        if REPLICATE:
+            self.proj.weight = pickle.load(open(f"{debugpath}/Patchembed_Conv2d_weight.pkl", "rb"))
+            self.proj.bias = pickle.load(open(f"{debugpath}/Patchembed_Conv2d_bias.pkl", "rb"))
         x = self.proj(x).flatten(2).transpose(1, 2)
         if REPLICATE:
             pickle.dump(self.proj.weight, open(f"{debugpath}/Patchembed_Conv2d_weight_after.pkl", "wb"))

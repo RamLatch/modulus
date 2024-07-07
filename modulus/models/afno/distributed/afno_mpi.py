@@ -354,6 +354,9 @@ class DistributedPatchEmbed(nn.Module):
                 f"Input input size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
         # new: B, C, H*W
+        if REPLICATE:
+            self.proj.weight = pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "rb"))
+            self.proj.bias = pickle.load(open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "rb"))
         x = self.proj(x).flatten(2)
         
         if REPLICATE:
