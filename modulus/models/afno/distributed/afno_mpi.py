@@ -320,8 +320,8 @@ class DistributedPatchEmbed(nn.Module):
         self.proj = nn.Conv2d(
                 in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
         )
-        print("self.proj.weight",self.proj.weight)
-        print("self.proj.bias",self.proj.bias)
+        #print("self.proj.weight",self.proj.weight)
+        #print("self.proj.bias",self.proj.bias)
         if REPLICATE:
             pickle.dump(self.proj.weight, open(f"{debugpath}/DistPatchembed_Conv2d_weight.pkl", "wb"))
             pickle.dump(self.proj.bias, open(f"{debugpath}/DistPatchembed_Conv2d_bias.pkl", "wb"))
