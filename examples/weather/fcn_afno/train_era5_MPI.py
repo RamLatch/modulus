@@ -201,14 +201,14 @@ def main(cfg: DictConfig) -> None:
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
 
     # Attempt to load latest checkpoint if one exists
-    loaded_epoch = load_checkpoint(
-        to_absolute_path(cfg.ckpt_path),
-        models=fcn_model,
-        optimizer=optimizer,
-        scheduler=scheduler,
-        device=torch.device("cuda"  if torch.cuda.is_available() else 'cpu'),
-    )
-    # loaded_epoch = 0
+    # loaded_epoch = load_checkpoint(
+    #     to_absolute_path(cfg.ckpt_path),
+    #     models=fcn_model,
+    #     optimizer=optimizer,
+    #     scheduler=scheduler,
+    #     device=torch.device("cuda"  if torch.cuda.is_available() else 'cpu'),
+    # )
+    loaded_epoch = 0
 
 #    @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
@@ -254,15 +254,15 @@ def main(cfg: DictConfig) -> None:
 
         scheduler.step()
 
-        if (epoch % 5 == 0 or epoch == 1) and rank == 0:
+        # if (epoch % 5 == 0 or epoch == 1) and rank == 0:
             # Use Modulus Launch checkpoint
-            save_checkpoint(
-                to_absolute_path(cfg.ckpt_path),
-                models=fcn_model,
-                optimizer=optimizer,
-                scheduler=scheduler,
-                epoch=epoch,
-            )
+            # save_checkpoint(
+            #     to_absolute_path(cfg.ckpt_path),
+            #     models=fcn_model,
+            #     optimizer=optimizer,
+            #     scheduler=scheduler,
+            #     epoch=epoch,
+            # )
 
     if rank == 0:
         logger.info("Finished training!")
