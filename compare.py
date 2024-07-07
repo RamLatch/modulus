@@ -10,7 +10,7 @@ def compare(name1,name2,name3=None):
     if name3 is not None:
         path3 = f"{PATH}/{name3}.pkl"
         sgl_imag = pickle.load(open(path3, "rb"))
-        sgl = torch.stack([sgl,sgl_imag],dim=-1)
+        sgl = torch.stack([sgl[...,None],sgl_imag[...,None]],dim=-1)
     # print(mpi)
     # print(sgl)
     print(name1,name2,"\n",mpi.shape,sgl.shape)
