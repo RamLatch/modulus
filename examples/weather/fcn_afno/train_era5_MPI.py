@@ -126,19 +126,23 @@ def main(cfg: DictConfig) -> None:
     except:
         LOCAL_RANK = WORLD_SIZE = WORLD_RANK = None
     print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
-    if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
-        import torch.distributed as dist
-        dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
-        print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
-    else: comm = MPI.COMM_WORLD
-    if WORLD_SIZE is None or LOCAL_RANK is None or WORLD_RANK is None:
-        rank = comm.Get_rank()
-        world_size = comm.Get_size()
-        local_rank = rank
-    else:
-        rank = WORLD_RANK
-        world_size = WORLD_SIZE
-        local_rank = LOCAL_RANK
+    # if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
+    #     import torch.distributed as dist
+    #     dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
+    #     print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
+    # else: comm = MPI.COMM_WORLD
+    # if WORLD_SIZE is None or LOCAL_RANK is None or WORLD_RANK is None:
+    #     rank = comm.Get_rank()
+    #     world_size = comm.Get_size()
+    #     local_rank = rank
+    # else:
+    #     rank = WORLD_RANK
+    #     world_size = WORLD_SIZE
+    #     local_rank = LOCAL_RANK
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    world_size = comm.Get_size()
+    local_rank = rank
 
     datapipe = ERA5HDF5Datapipe(
         data_dir=to_absolute_path(cfg.train_dir),
@@ -253,7 +257,7 @@ def main(cfg: DictConfig) -> None:
                 log.log_epoch({"Validation error": error})
 
         if world_size > 1:
-            comm.barrier() if not dist.is_initialized() else dist.barrier("model_parallel")
+            comm.barrier()# if not dist.is_initialized() else dist.barrier("model_parallel")
 
         scheduler.step()
         #writer = SummaryWriter('runs/fashion_mnist_experiment_1')
