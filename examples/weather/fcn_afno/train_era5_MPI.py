@@ -236,7 +236,7 @@ def main(cfg: DictConfig) -> None:
             # === Training step ===
             for j, data in enumerate(datapipe):
                 invar = data[0]["invar"]
-                if j == 0: fuck = invar.copy()
+                if j == 0: fuck = invar.detach().clone()
                 outvar = data[0]["outvar"]
                 loss = train_step_forward(fcn_model, invar, outvar)
 
