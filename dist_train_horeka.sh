@@ -15,7 +15,8 @@
 
 ml purge
 ml load compiler/intel/2023.1.0
-ml load mpi/openmpi/4.1
+# ml load mpi/openmpi/4.1
+ml load mpi/openmpi/5.0
 
 BASE_DIR="/hkfs/work/workspace/scratch/ie5012-MA"
 TRAIN_FILE="${BASE_DIR}/modulus/examples/weather/fcn_afno/train_era5_MPI.py"
