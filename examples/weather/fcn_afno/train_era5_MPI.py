@@ -154,8 +154,8 @@ def main(cfg: DictConfig) -> None:
         patch_size=(8, 8),
         num_workers=cfg.num_workers_train,
         device=torch.device("cuda" if torch.cuda.is_available() else 'cpu'),
-        process_rank=rank or local_rank,
-        world_size=world_size,
+        process_rank=0,#rank or local_rank,
+        world_size=1#world_size,
     )
     logger.success(f"Loaded datapipe of size {len(datapipe)}")
     if rank == 0:
