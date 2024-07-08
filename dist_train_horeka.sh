@@ -39,4 +39,4 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_NODELIST | head -n 1)
 source $BASE_DIR/.venvs/Modulus/bin/activate
 # srun -u --mpi=pmi2 bash -c " 
 #   python $TRAIN_FILE"
-mpirun --bind-to core --map-by core -report-bindings -bind-to none --mca mpi_warn_on_fork 0 python -u $TRAIN_FILE
+mpirun --bind-to core --map-by core -report-bindings --mca mpi_warn_on_fork 0 python -u $TRAIN_FILE
