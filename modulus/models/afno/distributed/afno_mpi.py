@@ -100,7 +100,7 @@ class DropPath(nn.Module):
     """
 
     def __init__(self, drop_prob=None):
-        logger.info("Initializing DropPath")
+        # logger.info("Initializing DropPath")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -123,7 +123,7 @@ class DistributedMLP(nn.Module):
         output_is_matmul_parallel=False,
         comm:MPI.Intracomm=None
     ):
-        logger.info("Initializing DistributedMLP")
+        # logger.info("Initializing DistributedMLP")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -161,7 +161,7 @@ class DistributedMLP(nn.Module):
 
         # init weights
         self._init_weights()
-        logger.info("DistributedMLP initialized")
+        # logger.info("DistributedMLP initialized")
 
     def _init_weights(self):
         torch.nn.init.trunc_normal_(self.w1, std=0.02)
@@ -205,7 +205,7 @@ class DistributedPatchEmbed(nn.Module):
         output_is_matmul_parallel=True,
         comm:MPI.Intracomm=None
     ):
-        logger.info("Initializing DistributedPatchEmbed")
+        # logger.info("Initializing DistributedPatchEmbed")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -255,7 +255,7 @@ class DistributedPatchEmbed(nn.Module):
         # make sure we reduce them across rank
         self.proj.weight.is_shared_spatial = True
         self.proj.bias.is_shared_spatial = True
-        logger.info("DistributedPatchEmbed initialized")
+        # logger.info("DistributedPatchEmbed initialized")
 
     def forward(self, x: Tensor):
         if self.comm.Get_size() > 1:
@@ -316,7 +316,7 @@ class DistributedAFNO2D(nn.Module):
         output_is_matmul_parallel=False,
         comm:MPI.Intracomm=None
     ):
-        logger.info("Initializing DistributedAFNO2D")
+        # logger.info("Initializing DistributedAFNO2D")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -393,7 +393,7 @@ class DistributedAFNO2D(nn.Module):
         self.b1.is_shared_spatial = True
         self.w2.is_shared_spatial = True
         self.b2.is_shared_spatial = True
-        logger.info("DistributedAFNO2D initialized")
+        # logger.info("DistributedAFNO2D initialized")
 
     def forward(self, x):
         if self.comm.Get_size() > 1:
@@ -473,7 +473,7 @@ class DistributedBlock(nn.Module):
         output_is_matmul_parallel=False,
         comm:MPI.Intracomm=None
     ):
-        logger.info("Initializing DistributedBlock")
+        # logger.info("Initializing DistributedBlock")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -515,7 +515,7 @@ class DistributedBlock(nn.Module):
             comm=comm
         )
         self.double_skip = double_skip
-        logger.info("DistributedBlock initialized")
+        # logger.info("DistributedBlock initialized")
 
     def forward(self, x):
         scatter_shapes = compute_split_shapes(
@@ -566,7 +566,7 @@ class DistributedAFNONet(nn.Module):
         output_is_matmul_parallel=False,
         comm:MPI.Intracomm=None,
     ):
-        logger.info("Initializing DistributedAFNONet")
+        # logger.info("Initializing DistributedAFNONet")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -658,7 +658,7 @@ class DistributedAFNONet(nn.Module):
         # init weights
         torch.nn.init.trunc_normal_(self.pos_embed, std=0.02)
         self.apply(self._init_weights)
-        logger.info("DistributedAFNONet initialized")
+        # logger.info("DistributedAFNONet initialized")
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
@@ -786,7 +786,7 @@ class DistributedAFNOMPI(modulus.Module):
         channel_parallel_outputs: bool = False,
         comm:MPI.Intracomm=None,
     ) -> None:
-        logger.info("Initializing DistributedAFNOMPI")
+        # logger.info("Initializing DistributedAFNOMPI")
         if REPLICATE:
             random.seed(42)
             np.random.seed(42)
@@ -816,7 +816,7 @@ class DistributedAFNOMPI(modulus.Module):
             output_is_matmul_parallel=False,
             comm=comm,
         )
-        logger.info("DistributedAFNOMPI initialized")
+        # logger.info("DistributedAFNOMPI initialized")
 
     def forward(self, in_vars: Tensor) -> Tensor:
         return self._impl(in_vars)

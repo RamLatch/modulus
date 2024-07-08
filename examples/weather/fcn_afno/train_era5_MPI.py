@@ -183,7 +183,6 @@ def main(cfg: DictConfig) -> None:
         num_blocks=8,
         comm=comm or None
     ).to(torch.device("cuda" if torch.cuda.is_available() else 'cpu'))
-    logger.success(f"Loaded model on rank {rank} on {'cuda' if torch.cuda.is_available() else 'cpu'}")
     if rank == 0 and wandb.run is not None:
         wandb.watch(
             fcn_model, log="all", log_freq=1000, log_graph=(True)
@@ -203,7 +202,6 @@ def main(cfg: DictConfig) -> None:
     # Initialize optimizer and scheduler
     optimizer = torch.optim.Adam(fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
-    logger.success("Initialized optimizer and scheduler")
     # Attempt to load latest checkpoint if one exists
     # loaded_epoch = load_checkpoint(
     #     to_absolute_path(cfg.ckpt_path),
@@ -213,7 +211,6 @@ def main(cfg: DictConfig) -> None:
     #     device=torch.device("cuda"  if torch.cuda.is_available() else 'cpu'),
     # )
     loaded_epoch = 0
-    logger.success("Loaded checkpoint")
 
     @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
@@ -232,6 +229,8 @@ def main(cfg: DictConfig) -> None:
     # Main training loop
     max_epoch = cfg.max_epoch
     logger.info(f"Starting training for {max_epoch} epochs")
+    comm.barrier()
+    print("after barrier")
     for epoch in range(max(1, loaded_epoch + 1), max_epoch + 1):
         # Wrap epoch in launch logger for console / WandB logs
         with LaunchLogger(
