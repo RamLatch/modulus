@@ -37,7 +37,7 @@ from omegaconf import DictConfig
 from mpi4py import MPI
 
 from modulus.models.afno import AFNO
-from modulus.models.afno.distributed import DistributedAFNOMPI
+from modulus.models.afno.distributed import DistributedAFNOMPI, DistributedAFNONet
 from modulus.datapipes.climate import ERA5HDF5Datapipe
 from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 
@@ -170,10 +170,13 @@ def main(cfg: DictConfig) -> None:
         )
         logger.success(f"Loaded validation datapipe of size {len(validation_datapipe)}")
 
-    fcn_model = DistributedAFNOMPI(
+    # fcn_model = DistributedAFNOMPI(
+    fcn_model = DistributedAFNONet(
         inp_shape=[720, 1440],
-        in_channels=len(cfg.channels),
-        out_channels=len(cfg.channels),
+        # in_channels=len(cfg.channels),
+        in_chans=len(cfg.channels),
+        # out_channels=len(cfg.channels),
+        out_chans=len(cfg.channels),
         patch_size=8,
         embed_dim=768,
         depth=12,
@@ -272,7 +275,7 @@ def main(cfg: DictConfig) -> None:
     if rank == 0:
         logger.info("Finished training!")
     onnx_program = torch.onnx.dynamo_export(fcn_model, fuck)
-    onnx_program.save("distAFNO.onnx")
+    onnx_program.save("distAFNONet.onnx")
 
 fuck = None
 

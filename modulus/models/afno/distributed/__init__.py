@@ -15,4 +15,4 @@
 # limitations under the License.
 
 from .afno import DistributedAFNO
-from .afno_mpi import DistributedAFNOMPI
+from .afno_mpi import DistributedAFNOMPI, DistributedAFNONet

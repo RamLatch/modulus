@@ -766,7 +766,8 @@ class DistributedBlock(nn.Module):
         return x
 
 
-class DistributedAFNONet(nn.Module):
+class DistributedAFNONet(modulus.Module):
+# class DistributedAFNONet(nn.Module):
     def __init__(
         self,
         inp_shape=(720, 1440),
@@ -789,7 +790,8 @@ class DistributedAFNONet(nn.Module):
             random.seed(42)
             np.random.seed(42)
             torch.manual_seed(42)
-        super().__init__()
+        super().__init__(meta=MetaData())
+        # super().__init__()
         self.comm=comm
         self.rank = 0#!!comm.Get_rank() #if not dist.is_initialized() else dist.get_rank("model_parallel")
         self.world_size = 1#!!comm.Get_size() #if not dist.is_initialized() else dist.get_world_size("model_parallel")
@@ -797,6 +799,11 @@ class DistributedAFNONet(nn.Module):
         # comm sizes
         matmul_comm_size = self.world_size
 
+        if input_is_matmul_parallel:
+            if not (in_chans % matmul_comm_size == 0):
+                raise ValueError(
+                    "Error, in_channels needs to be divisible by model_parallel size"
+                )
         self.inp_shape = inp_shape
         self.patch_size = patch_size
         self.in_chans = in_chans
@@ -1003,7 +1010,7 @@ class DistributedAFNONet(nn.Module):
 
 @dataclass
 class MetaData(ModelMetaData):
-    name: str = "AFNOMPI"
+    name: str = "AFNOMPINet"
     # Optimization
     jit: bool = False  # ONNX Ops Conflict
     cuda_graphs: bool = True
