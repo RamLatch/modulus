@@ -100,7 +100,6 @@ def validation_step(eval_step, fcn_model, datapipe, channels=[0, 1], epoch=0):
 DUMMY = False
 @hydra.main(version_base="1.2", config_path="conf", config_name="config" if not DUMMY else "dummy_config")
 def main(cfg: DictConfig) -> None:
-    #from torch.utils.tensorboard import SummaryWriter
 
     # Initialize loggers
     # initialize_wandb(
@@ -119,30 +118,30 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-    try:
-        if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
-        if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-        if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
-    except:
-        LOCAL_RANK = WORLD_SIZE = WORLD_RANK = None
-    print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
-    # if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
-    #     import torch.distributed as dist
-    #     dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
-    #     print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
-    # else: comm = MPI.COMM_WORLD
-    # if WORLD_SIZE is None or LOCAL_RANK is None or WORLD_RANK is None:
-    #     rank = comm.Get_rank()
-    #     world_size = comm.Get_size()
-    #     local_rank = rank
-    # else:
-    #     rank = WORLD_RANK
-    #     world_size = WORLD_SIZE
-    #     local_rank = LOCAL_RANK
+    #!! try:
+    #!!     if not REPLICATE: LOCAL_RANK = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+    #!!     if not REPLICATE: WORLD_SIZE = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    #!!     if not REPLICATE: WORLD_RANK = int(os.environ['OMPI_COMM_WORLD_RANK'])
+    #!! except:
+    #!!     LOCAL_RANK = WORLD_SIZE = WORLD_RANK = None
+    #!! print(LOCAL_RANK,WORLD_RANK,WORLD_SIZE)
+    #!! if WORLD_RANK is not None and WORLD_SIZE is not None and LOCAL_RANK is not None:
+    #!!     import torch.distributed as dist
+    #!!     dist.init_process_group(init_method="env://",group_name="model_parallel",world_size=WORLD_SIZE,rank=WORLD_RANK)
+    #!!     print(f"Initialized process group with rank {WORLD_RANK} and world size {WORLD_SIZE}")
+    #!! else: comm = MPI.COMM_WORLD
+    #!! if WORLD_SIZE is None or LOCAL_RANK is None or WORLD_RANK is None:
+    #!!     rank = comm.Get_rank()
+    #!!     world_size = comm.Get_size()
+    #!!     local_rank = rank
+    #!! else:
+    #!!     rank = WORLD_RANK
+    #!!     world_size = WORLD_SIZE
+    #!!     local_rank = LOCAL_RANK
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     world_size = comm.Get_size()
-    local_rank = rank
+    #!! local_rank = rank
 
     datapipe = ERA5HDF5Datapipe(
         data_dir=to_absolute_path(cfg.train_dir),
@@ -154,8 +153,8 @@ def main(cfg: DictConfig) -> None:
         patch_size=(8, 8),
         num_workers=cfg.num_workers_train,
         device=torch.device("cuda" if torch.cuda.is_available() else 'cpu'),
-        process_rank=0,#rank or local_rank,
-        world_size=1#world_size,
+        process_rank=0,#!!rank or local_rank,
+        world_size=1#!!world_size,
     )
     logger.success(f"Loaded datapipe of size {len(datapipe)}")
     if rank == 0:
@@ -184,7 +183,7 @@ def main(cfg: DictConfig) -> None:
         num_blocks=8,
         comm=comm or None
     ).to(torch.device("cuda" if torch.cuda.is_available() else 'cpu'))
-
+    logger.success(f"Loaded model on rank {rank} on {'cuda' if torch.cuda.is_available() else 'cpu'}")
     if rank == 0 and wandb.run is not None:
         wandb.watch(
             fcn_model, log="all", log_freq=1000, log_graph=(True)
@@ -204,7 +203,7 @@ def main(cfg: DictConfig) -> None:
     # Initialize optimizer and scheduler
     optimizer = torch.optim.Adam(fcn_model.parameters(), betas=(0.9, 0.999), lr=0.0005, weight_decay=0.0)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
-
+    logger.success("Initialized optimizer and scheduler")
     # Attempt to load latest checkpoint if one exists
     # loaded_epoch = load_checkpoint(
     #     to_absolute_path(cfg.ckpt_path),
@@ -214,6 +213,7 @@ def main(cfg: DictConfig) -> None:
     #     device=torch.device("cuda"  if torch.cuda.is_available() else 'cpu'),
     # )
     loaded_epoch = 0
+    logger.success("Loaded checkpoint")
 
     @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
@@ -231,6 +231,7 @@ def main(cfg: DictConfig) -> None:
 
     # Main training loop
     max_epoch = cfg.max_epoch
+    logger.info(f"Starting training for {max_epoch} epochs")
     for epoch in range(max(1, loaded_epoch + 1), max_epoch + 1):
         # Wrap epoch in launch logger for console / WandB logs
         with LaunchLogger(
@@ -260,9 +261,6 @@ def main(cfg: DictConfig) -> None:
             comm.barrier()# if not dist.is_initialized() else dist.barrier("model_parallel")
 
         scheduler.step()
-        #writer = SummaryWriter('runs/fashion_mnist_experiment_1')
-        #writer.add_graph(fcn_model, invar)
-        #writer.close()
 
         # if (epoch % 5 == 0 or epoch == 1) and rank == 0:
             # Use Modulus Launch checkpoint
