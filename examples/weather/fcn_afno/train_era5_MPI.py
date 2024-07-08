@@ -138,9 +138,8 @@ def main(cfg: DictConfig) -> None:
     #!!     rank = WORLD_RANK
     #!!     world_size = WORLD_SIZE
     #!!     local_rank = LOCAL_RANK
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    world_size = comm.Get_size()
+    
+    
     #!! local_rank = rank
 
     datapipe = ERA5HDF5Datapipe(
@@ -278,4 +277,7 @@ def main(cfg: DictConfig) -> None:
 #!!onnx_save_input = None
 
 if __name__ == "__main__":
+    comm = MPI.COMM_WORLD
+    rank = comm.rank
+    world_size = comm.size
     main()
