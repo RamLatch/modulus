@@ -37,7 +37,7 @@ from omegaconf import DictConfig
 from mpi4py import MPI
 
 from modulus.models.afno import AFNO
-from modulus.models.afno.distributed import DistributedAFNOMPI, DistributedAFNONet
+from modulus.models.afno.distributed import DistributedAFNOMPI#!!, DistributedAFNONet
 from modulus.datapipes.climate import ERA5HDF5Datapipe
 from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 
@@ -170,15 +170,11 @@ def main(cfg: DictConfig) -> None:
         )
         logger.success(f"Loaded validation datapipe of size {len(validation_datapipe)}")
 
-    # fcn_model = DistributedAFNOMPI(
-    fcn_model = DistributedAFNONet(
+    fcn_model = DistributedAFNOMPI(
         inp_shape=[720, 1440],
-        # in_channels=len(cfg.channels),
-        in_chans=len(cfg.channels),
-        # out_channels=len(cfg.channels),
-        out_chans=len(cfg.channels),
-        # patch_size=8,
-        patch_size=(8,8),
+        in_channels=len(cfg.channels),
+        out_channels=len(cfg.channels),
+        patch_size=8,
         embed_dim=768,
         depth=12,
         num_blocks=8,
@@ -236,11 +232,11 @@ def main(cfg: DictConfig) -> None:
         with LaunchLogger(
             "train", epoch=epoch, num_mini_batch=len(datapipe), epoch_alert_freq=10
         ) as log:
-            global fuck
+            #!!global onnx_save_input
             # === Training step ===
             for j, data in enumerate(datapipe):
                 invar = data[0]["invar"]
-                if j == 0: fuck = invar.detach().clone()
+                #!!if j == 0: onnx_save_input = invar.detach().clone()
                 outvar = data[0]["outvar"]
                 loss = train_step_forward(fcn_model, invar, outvar)
 
@@ -275,10 +271,10 @@ def main(cfg: DictConfig) -> None:
             # )
     if rank == 0:
         logger.info("Finished training!")
-    onnx_program = torch.onnx.dynamo_export(fcn_model, fuck)
-    onnx_program.save("distAFNONet.onnx")
+    #!!onnx_program = torch.onnx.dynamo_export(fcn_model, onnx_save_input)
+    #!!onnx_program.save("distAFNONet.onnx")
 
-fuck = None
+#!!onnx_save_input = None
 
 if __name__ == "__main__":
     main()

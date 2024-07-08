@@ -210,11 +210,11 @@ def main(cfg: DictConfig) -> None:
         with LaunchLogger(
             "train", epoch=epoch, num_mini_batch=len(datapipe), epoch_alert_freq=10
         ) as log:
-            #!!global onnx_save_input
+            global fuck
             # === Training step ===
             for j, data in enumerate(datapipe):
                 invar = data[0]["invar"]
-                #!!if j == 0: onnx_save_input = invar.detach().clone()
+                if j == 0: fuck = invar.detach().clone()
                 outvar = data[0]["outvar"]
                 loss = train_step_forward(fcn_model, invar, outvar)
 
@@ -247,10 +247,10 @@ def main(cfg: DictConfig) -> None:
 
     if rank == 0:
         logger.info("Finished training!")
-    #!!onnx_program = torch.onnx.dynamo_export(fcn_model, onnx_save_input)
-    #!!onnx_program.save("SglAFNO.onnx")
+    onnx_program = torch.onnx.dynamo_export(fcn_model, fuck)
+    onnx_program.save("SglAFNO.onnx")
 
-#!!onnx_save_input = None
+fuck = None
 
 if __name__ == "__main__":
     main()

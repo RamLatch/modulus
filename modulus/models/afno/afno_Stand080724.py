@@ -27,7 +27,10 @@ if REPLICATE:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.set_printoptions(threshold=10_000)
-    
+PRINTGRAPH = True
+if PRINTGRAPH:
+    from torchviz import make_dot
+    GRAPHEPOCH = 0
 from dataclasses import dataclass
 from functools import partial
 import os
@@ -44,6 +47,9 @@ from ..meta import ModelMetaData
 from ..module import Module
 
 Tensor = torch.Tensor
+BLOCK_DEBUG = 0
+dumps = 0
+debugpath = "/hkfs/work/workspace/scratch/ie5012-MA/debug"
 
 class AFNOMlp(nn.Module):
     """Fully-connected Multi-layer perception used inside AFNO
@@ -81,11 +87,44 @@ class AFNOMlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x: Tensor) -> Tensor:
+        global dumps
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_Input.pkl", "wb"))
+            # try:    print("AFNOMlp x:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp x:",x)
         x = self.fc1(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_fc1.pkl", "wb"))
+            # try:    print("AFNOMlp fc1:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp fc1:",x)
         x = self.act(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_act.pkl", "wb"))
+            # try:    print("AFNOMlp act:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp act:",x)
         x = self.drop(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_drop.pkl", "wb"))
+            # try:    print("AFNOMlp drop:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp drop:",x)
         x = self.fc2(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_fc2.pkl", "wb"))
+            # try:    print("AFNOMlp fc2:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp fc2:",x)
         x = self.drop(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNOMlp_drop2.pkl", "wb"))
+            # try:    print("AFNOMlp return:",x.detach().cpu().numpy())
+            # except: print("AFNOMlp return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglAFNOMlp", format="png")
         return x
 
 
@@ -138,15 +177,36 @@ class AFNO2DLayer(nn.Module):
         self.b2 = nn.Parameter(self.scale * torch.randn(2, self.num_blocks, self.block_size))
 
     def forward(self, x: Tensor) -> Tensor:
+        global dumps
         bias = x
         dtype = x.dtype
         x = x.float()
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_Input.pkl", "wb"))
+            # try:    print("AFNO2DLayer x:",x.detach().cpu().numpy())
+            # except: print("AFNO2DLayer x:",x)
         B, H, W, C = x.shape
         # Using ONNX friendly FFT functions
         x = fft.rfft2(x, dim=(1, 2), norm="ortho")
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_rfft2.pkl", "wb"))
+            # try:    print("AFNO2DLayer rfft2:",x.detach().cpu().numpy())
+            # except: print("AFNO2DLayer rfft2:",x)
         x_real, x_imag = fft.real(x), fft.imag(x)
         x_real = x_real.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
         x_imag = x_imag.reshape(B, H, W // 2 + 1, self.num_blocks, self.block_size)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_real.pkl", "wb"))
+            # try:    print("AFNO2DLayer x_real:",x_real.detach().cpu().numpy())
+            # except: print("AFNO2DLayer x_real:",x_real)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_imag.pkl", "wb"))
+            # try:    print("AFNO2DLayer x_imag:",x_imag.detach().cpu().numpy())
+            # except: print("AFNO2DLayer x_imag:",x_imag)
 
         o1_real = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
         o1_imag = torch.zeros([B,H,W // 2 + 1, self.num_blocks, self.block_size * self.hidden_size_factor],device=x.device)
@@ -160,23 +220,48 @@ class AFNO2DLayer(nn.Module):
             torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
             self.b1[0]
         )
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(o1_real, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o1_real.pkl", "wb"))
+            # try:    print("AFNO2DLayer o1_real:",o1_real.detach().cpu().numpy())
+            # except: print("AFNO2DLayer o1_real:",o1_real)
         o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes] = F.relu(
             torch.einsum("nyxbi,bio->nyxbo",x_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[0]) +
             torch.einsum("nyxbi,bio->nyxbo",x_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w1[1]) +
             self.b1[1]
         )
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(o1_imag, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o1_imag.pkl", "wb"))
+            # try:    print("AFNO2DLayer o1_imag:",o1_imag.detach().cpu().numpy())
+            # except: print("AFNO2DLayer o1_imag:",o1_imag)
         o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 0] = (
             torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) -
             torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
             self.b2[0]
         )
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(o2[..., 0], open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o2_real.pkl", "wb"))
+            # try:    print("AFNO2DLayer o2_real:",o2[..., 0].detach().cpu().numpy())
+            # except: print("AFNO2DLayer o2_real:",o2[..., 0])
         o2[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes, ..., 1] = (
             torch.einsum("nyxbi,bio->nyxbo",o1_imag[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[0]) +
             torch.einsum("nyxbi,bio->nyxbo",o1_real[:, total_modes - kept_modes : total_modes + kept_modes, :kept_modes],self.w2[1]) +
             self.b2[1]
         )
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(o2[..., 1], open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_o2_imag.pkl", "wb"))
+            # try:    print("AFNO2DLayer o2_imag:",o2[..., 1].detach().cpu().numpy())
+            # except: print("AFNO2DLayer o2_imag:",o2[..., 1])
         x = F.softshrink(o2, lambd=self.sparsity_threshold)
         x = fft.view_as_complex(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_x_complex.pkl", "wb"))
+            # try:    print("AFNO2DLayer x_complex:",x.detach().cpu().numpy())
+            # except: print("AFNO2DLayer x_complex:",x)
         # TODO(akamenev): replace the following branching with
         # a one-liner, something like x.reshape(..., -1).squeeze(-1),
         # but this currently fails during ONNX export.
@@ -186,8 +271,21 @@ class AFNO2DLayer(nn.Module):
             x = x.reshape(B, H, W // 2 + 1, C)
         # Using ONNX friendly FFT functions
         x = fft.irfft2(x, s=(H, W), dim=(1, 2), norm="ortho")
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_irfft2.pkl", "wb"))
+            # try:    print("AFNO2DLayer irfft2:",x.detach().cpu().numpy())
+            # except: print("AFNO2DLayer irfft2:",x)
         x = x.type(dtype)
-        return x + bias
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO2DLayer_return.pkl", "wb"))
+            # try:    print("AFNO2DLayer return:",x+bias.detach().cpu().numpy())
+            # except: print("AFNO2DLayer return:",x+bias)
+        x = x + bias
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglAFNO2DLayer", format="png")
+        return x# + bias
 
 
 class Block(nn.Module):
@@ -249,17 +347,55 @@ class Block(nn.Module):
         self.double_skip = double_skip
 
     def forward(self, x: Tensor) -> Tensor:
+        global dumps
         residual = x
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_Input.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} residual:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} residual:",x)
         x = self.norm1(x)
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_norm1.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} norm1:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} norm1:",x)
         x = self.filter(x)
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_filter.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} filter:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} filter:",x)
 
         if self.double_skip:
             x = x + residual
             residual = x
+            if REPLICATE:
+                dumps += 1
+                pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_double_skip.pkl", "wb"))
+                # try:    print(f"Block {BLOCK_DEBUG} double skip:",x.detach().cpu().numpy())
+                # except: print(f"Block {BLOCK_DEBUG} double skip:",x)
 
         x = self.norm2(x)
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_norm2.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} norm2:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} norm2:",x)
         x = self.mlp(x)
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_mlp.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} mlp:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} mlp:",x)
         x = x + residual
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_Block_{BLOCK_DEBUG}_return.pkl", "wb"))
+            # try:    print(f"Block {BLOCK_DEBUG} return:",x.detach().cpu().numpy())
+            # except: print(f"Block {BLOCK_DEBUG} return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0 and BLOCK_DEBUG == 0:
+            make_dot(x).render(f"{debugpath}/SglBlock_{BLOCK_DEBUG}", format="png")
         return x
 
 
@@ -292,6 +428,8 @@ class PatchEmbed(nn.Module):
             np.random.seed(42)
             torch.manual_seed(42)
             torch.cuda.manual_seed(42)
+            torch.random.set_rng_state(pickle.load(open(f"{debugpath}/torchrandomstate.pkl", "rb")))
+            torch.cuda.random.set_rng_state_all(pickle.load(open(f"{debugpath}/cudarandomstate.pkl", "rb")))
 
         super().__init__()
         if len(inp_shape) != 2:
@@ -303,17 +441,48 @@ class PatchEmbed(nn.Module):
         self.inp_shape = inp_shape
         self.patch_size = patch_size
         self.num_patches = num_patches
-        self.proj = nn.Conv2d(
-            in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
-        )
+        if REPLICATE:
+            #if os.path.exists(f"{debugpath}/Conv2d.pkl"):
+            #    self.proj = pickle.load(open(f"{debugpath}/Conv2d.pkl", "rb"))
+            #else:
+                self.proj = nn.Conv2d(
+                    in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
+                )
+                print("self.proj.weight",self.proj.weight)
+                print("self.proj.bias",self.proj.bias)
+                pickle.dump(self.proj.weight, open(f"{debugpath}/Patchembed_Conv2d_weight.pkl", "wb"))
+                pickle.dump(self.proj.bias, open(f"{debugpath}/Patchembed_Conv2d_bias.pkl", "wb"))
+        else:
+            self.proj = nn.Conv2d(
+                in_channels, embed_dim, kernel_size=patch_size, stride=patch_size
+            )
 
     def forward(self, x: Tensor) -> Tensor:
         B, C, H, W = x.shape
+        global dumps
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_Input.pkl", "wb"))
+            # try:    print("PatchEmbed x:",x.detach().cpu().numpy())
+            # except: print("PatchEmbed x:",x)
         if not (H == self.inp_shape[0] and W == self.inp_shape[1]):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.inp_shape[0]}*{self.inp_shape[1]})."
             )
+        if REPLICATE:
+            self.proj.weight = nn.Parameter(pickle.load(open(f"{debugpath}/Patchembed_Conv2d_weight.pkl", "rb")).type_as(self.proj.weight))
+            self.proj.bias = nn.Parameter(pickle.load(open(f"{debugpath}/Patchembed_Conv2d_bias.pkl", "rb")).type_as(self.proj.bias))
         x = self.proj(x).flatten(2).transpose(1, 2)
+        if REPLICATE:
+            pickle.dump(self.proj.weight, open(f"{debugpath}/Patchembed_Conv2d_weight_after.pkl", "wb"))
+            pickle.dump(self.proj.bias, open(f"{debugpath}/Patchembed_Conv2d_bias_after.pkl", "wb"))
+        if REPLICATE:
+            # dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_PatchEmbed_return.pkl", "wb"))
+            # try:    print("PatchEmbed return:",x.detach().cpu().numpy())
+            # except: print("PatchEmbed return:",x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPatchEmbed", format="png")
         return x
 
 
@@ -481,20 +650,71 @@ class AFNO(Module):
     #     return {"pos_embed", "cls_token"}
 
     def forward_features(self, x: Tensor) -> Tensor:
+        global BLOCK_DEBUG
+        global dumps
         """Forward pass of core AFNO"""
         B = x.shape[0]
         x = self.patch_embed(x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPatchEmbed", format="png")
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_patch_embed.pkl", "wb"))
+            # try:    print("Afno patch embed:",x.detach().cpu().numpy())
+            # except: print("Afno patch embed:",x)
         x = x + self.pos_embed
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPosEmbed", format="png")
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_pos_embed.pkl", "wb"))
+            # try:    print("Afno pos embed:",x.detach().cpu().numpy())
+            # except: print("Afno pos embed:",x)
         x = self.pos_drop(x)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/SglPosDrop", format="png")
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_pos_drop.pkl", "wb"))
+            # try:    print("Afno pos drop:",x.detach().cpu().numpy())
+            # except: print("Afno pos drop:",x)
 
         x = x.reshape(B, self.h, self.w, self.embed_dim)
+        if REPLICATE:
+            #dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_reshape.pkl", "wb"))
+            # try:    print("Afno reshape:",x.detach().cpu().numpy())
+            # except: print("Afno reshape:",x)
         for blk in self.blocks:
             x = blk(x)
+            BLOCK_DEBUG += 1
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_blocks.pkl", "wb"))
+            # try:    print("Afno return:",x.detach().cpu().numpy())
+            # except: print("Afno return:",x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:
+        global dumps
+        global GRAPHEPOCH
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_Input.pkl", "wb"))
+            # try:    print("Afno forward:",x.detach().cpu().numpy())
+            # except: print("Afno forward:",x)
         x = self.forward_features(x)
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_forward_features.pkl", "wb"))
+            # try:    print("Afno forward features:",x.detach().cpu().numpy())
+            # except: print("Afno forward features:",x)
         x = self.head(x)
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(x, open(f"{debugpath}/{dumps:03d}_AFNO_head.pkl", "wb"))
+            # try:    print("Afno head:",x.detach().cpu().numpy())
+            # except: print("Afno head:",x)
         # Correct tensor shape back into [B, C, H, W]
         # [b h w (p1 p2 c_out)]
         out = x.view(list(x.shape[:-1]) + [self.patch_size[0], self.patch_size[1], -1])
@@ -503,4 +723,14 @@ class AFNO(Module):
         # [b c_out, h, p1, w, p2]
         out = out.reshape(list(out.shape[:2]) + [self.inp_shape[0], self.inp_shape[1]])
         # [b c_out, (h*p1), (w*p2)]
+        if REPLICATE:
+            dumps += 1
+            pickle.dump(out, open(f"{debugpath}/{dumps:03d}_AFNO_return.pkl", "wb"))
+            # try:    print("Afno return:",out.detach().cpu().numpy())
+            # except: print("Afno return:",out)
+        if REPLICATE: exit(1)
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            GRAPHEPOCH = 1
+            make_dot(out).render(f"{debugpath}/SglTensorGraph",format="png")
+        # exit(1)
         return out
