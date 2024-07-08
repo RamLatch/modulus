@@ -207,12 +207,14 @@ def main(cfg: DictConfig) -> None:
     max_epoch = 0#cfg.max_epoch
     for epoch in range(max(1, loaded_epoch + 1), max_epoch + 1):
         # Wrap epoch in launch logger for console / WandB logs
+        stuff = None
         with LaunchLogger(
             "train", epoch=epoch, num_mini_batch=len(datapipe), epoch_alert_freq=10
         ) as log:
             # === Training step ===
             for j, data in enumerate(datapipe):
                 invar = data[0]["invar"]
+                stuff = invar
                 outvar = data[0]["outvar"]
                 loss = train_step_forward(fcn_model, invar, outvar)
 
