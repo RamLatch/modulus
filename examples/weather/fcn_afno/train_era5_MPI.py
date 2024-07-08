@@ -267,9 +267,9 @@ def main(cfg: DictConfig) -> None:
             #     scheduler=scheduler,
             #     epoch=epoch,
             # )
-        onnx_program = torch.onnx.dynamo_export(fcn_model, invar)
     if rank == 0:
         logger.info("Finished training!")
+    onnx_program = torch.onnx.dynamo_export(fcn_model, invar)
     onnx_program.save("distAFNO.onnx")
 
 
