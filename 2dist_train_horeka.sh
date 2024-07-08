@@ -1,10 +1,10 @@
 #!/usr/bin/env bash 
 
 #SBATCH --time=01:00:00
-#SBATCH --gres=gpu:1
-#SBATCH --nodes=2
-#SBATCH --gpus-per-node=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:2
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=2
+#SBATCH --ntasks-per-node=2
 
 #SBATCH -J m_dist_T
 #SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_080724/mpi-2-%j.out"  #results/slurm_logs/test_Dummy/mpi-%j"
@@ -15,7 +15,8 @@
 
 ml purge
 ml load compiler/intel/2023.1.0
-ml load mpi/openmpi/4.1
+# ml load mpi/openmpi/4.1
+ml load mpi/openmpi/5.0
 
 BASE_DIR="/hkfs/work/workspace/scratch/ie5012-MA"
 TRAIN_FILE="${BASE_DIR}/modulus/examples/weather/fcn_afno/train_era5_MPI.py"
