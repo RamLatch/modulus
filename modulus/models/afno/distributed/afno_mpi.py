@@ -906,7 +906,7 @@ class DistributedAFNONet(nn.Module):
             # except: print("DistributedAFNONet patch_embed:",x)
         x = x + self.pos_embed#.transpose(1, 2)
         if PRINTGRAPH and GRAPHEPOCH == 0:
-            make_dot(x,dict(list(self.pos_embed.named_parameters()))).render(f"{debugpath}/DistributedPose", format="png")
+            make_dot(x).render(f"{debugpath}/DistributedPose", format="png")
 
         if REPLICATE:
             dumps +=1

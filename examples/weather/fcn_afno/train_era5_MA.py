@@ -181,13 +181,13 @@ def main(cfg: DictConfig) -> None:
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=150)
 
     # Attempt to load latest checkpoint if one exists
-    loaded_epoch = load_checkpoint(
-        to_absolute_path(cfg.ckpt_path),
-        models=fcn_model,
-        optimizer=optimizer,
-        scheduler=scheduler,
-        device=torch.device("cuda"),
-    )
+    loaded_epoch = 0#load_checkpoint(
+    #     to_absolute_path(cfg.ckpt_path),
+    #     models=fcn_model,
+    #     optimizer=optimizer,
+    #     scheduler=scheduler,
+    #     device=torch.device("cuda"),
+    # )
 
     @StaticCaptureEvaluateNoGrad(model=fcn_model, logger=logger, use_graphs=False)
     def eval_step_forward(my_model, invar):
@@ -204,7 +204,7 @@ def main(cfg: DictConfig) -> None:
         return loss
 
     # Main training loop
-    max_epoch = cfg.max_epoch
+    max_epoch = 0#cfg.max_epoch
     for epoch in range(max(1, loaded_epoch + 1), max_epoch + 1):
         # Wrap epoch in launch logger for console / WandB logs
         with LaunchLogger(
@@ -242,9 +242,11 @@ def main(cfg: DictConfig) -> None:
                 scheduler=scheduler,
                 epoch=epoch,
             )
+        onnx_program = torch.onnx.dynamo_export(fcn_model, invar)
 
     if rank == 0:
         logger.info("Finished training!")
+    onnx_program.save("SglAFNO.onnx")
 
 
 if __name__ == "__main__":

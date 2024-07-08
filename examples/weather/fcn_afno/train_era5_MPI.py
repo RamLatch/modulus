@@ -100,7 +100,7 @@ def validation_step(eval_step, fcn_model, datapipe, channels=[0, 1], epoch=0):
 DUMMY = True
 @hydra.main(version_base="1.2", config_path="conf", config_name="config" if not DUMMY else "dummy_config")
 def main(cfg: DictConfig) -> None:
-    from torch.utils.tensorboard import SummaryWriter
+    #from torch.utils.tensorboard import SummaryWriter
 
     # Initialize loggers
     # initialize_wandb(
@@ -226,7 +226,7 @@ def main(cfg: DictConfig) -> None:
         return loss
 
     # Main training loop
-    max_epoch = cfg.max_epoch
+    max_epoch = 0#cfg.max_epoch
     for epoch in range(max(1, loaded_epoch + 1), max_epoch + 1):
         # Wrap epoch in launch logger for console / WandB logs
         with LaunchLogger(
@@ -254,9 +254,9 @@ def main(cfg: DictConfig) -> None:
             comm.barrier() if not dist.is_initialized() else dist.barrier("model_parallel")
 
         scheduler.step()
-        writer = SummaryWriter('runs/fashion_mnist_experiment_1')
-        writer.add_graph(fcn_model, invar)
-        writer.close()
+        #writer = SummaryWriter('runs/fashion_mnist_experiment_1')
+        #writer.add_graph(fcn_model, invar)
+        #writer.close()
 
         # if (epoch % 5 == 0 or epoch == 1) and rank == 0:
             # Use Modulus Launch checkpoint
@@ -267,9 +267,10 @@ def main(cfg: DictConfig) -> None:
             #     scheduler=scheduler,
             #     epoch=epoch,
             # )
-
+        onnx_program = torch.onnx.dynamo_export(fcn_model, invar)
     if rank == 0:
         logger.info("Finished training!")
+    onnx_program.save("distAFNO.onnx")
 
 
 if __name__ == "__main__":
