@@ -905,7 +905,8 @@ class DistributedAFNONet(nn.Module):
             # try:    print("DistributedAFNONet patch_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet patch_embed:",x)
         x = x + self.pos_embed#.transpose(1, 2)
-        make_dot(x).render(f"{debugpath}/DistributedPose", format="png")
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x,dict(list(self.pos_embed.named_parameters()))).render(f"{debugpath}/DistributedPose", format="png")
 
         if REPLICATE:
             dumps +=1
@@ -913,7 +914,8 @@ class DistributedAFNONet(nn.Module):
             # try:    print("DistributedAFNONet pos_embed:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet pos_embed:",x)
         x = self.pos_drop(x)
-        make_dot(x).render(f"{debugpath}/DistributedPoseDrop", format="png")
+        if PRINTGRAPH and GRAPHEPOCH == 0:
+            make_dot(x).render(f"{debugpath}/DistributedPoseDrop", format="png")
 
         if REPLICATE:
             dumps +=1
