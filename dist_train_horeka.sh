@@ -1,13 +1,13 @@
 #!/usr/bin/env bash 
 
 #SBATCH --time=01:00:00
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --gpus-per-node=2
+#SBATCH --ntasks-per-node=2
 
 #SBATCH -J m_dist_T
-#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_Dummy/mpi-%j.out"  #results/slurm_logs/test_Dummy/mpi-%j"
+#SBATCH --output="/hkfs/work/workspace/scratch/ie5012-MA/results/slurm_logs/test_080724/mpi-tw0-%j.out"  #results/slurm_logs/test_Dummy/mpi-%j"
 #SBATCH -p dev_accelerated
 #SBATCH --mem=501600mb
 #SBATCH --exclusive
