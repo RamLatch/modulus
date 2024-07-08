@@ -41,7 +41,7 @@ from modulus.models.afno.distributed import DistributedAFNOMPI
 from modulus.datapipes.climate import ERA5HDF5Datapipe
 from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 
-from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
+from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow, initialize_wandb
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
 import os
@@ -100,6 +100,7 @@ def validation_step(eval_step, fcn_model, datapipe, channels=[0, 1], epoch=0):
 DUMMY = True
 @hydra.main(version_base="1.2", config_path="conf", config_name="config" if not DUMMY else "dummy_config")
 def main(cfg: DictConfig) -> None:
+    from torch.utils.tensorboard import SummaryWriter
 
     # Initialize loggers
     # initialize_wandb(
@@ -253,6 +254,9 @@ def main(cfg: DictConfig) -> None:
             comm.barrier() if not dist.is_initialized() else dist.barrier("model_parallel")
 
         scheduler.step()
+        writer = SummaryWriter('runs/fashion_mnist_experiment_1')
+        writer.add_graph(fcn_model, invar)
+        writer.close()
 
         # if (epoch % 5 == 0 or epoch == 1) and rank == 0:
             # Use Modulus Launch checkpoint
