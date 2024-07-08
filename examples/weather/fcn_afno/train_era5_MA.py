@@ -96,7 +96,7 @@ def validation_step(eval_step, fcn_model, datapipe, channels=[0, 1], epoch=0):
     fcn_model.train()
     return loss_epoch / num_examples
 
-DUMMY = True
+DUMMY = False
 @hydra.main(version_base="1.2", config_path="conf", config_name="config" if not DUMMY else "dummy_config")
 def main(cfg: DictConfig) -> None:
 
