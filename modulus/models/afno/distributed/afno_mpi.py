@@ -148,7 +148,7 @@ class DistributedMLP(nn.Module):
         self.output_is_matmul_parallel = output_is_matmul_parallel
 
         # get effective embedding size:
-        comm_size = comm.Get_size() #if not dist.is_initialized() else dist.get_world_size()
+        comm_size = 1#!! comm.Get_size() #if not dist.is_initialized() else dist.get_world_size()
         if not (hidden_features % comm_size == 0):
             raise ValueError(
                 "Error, hidden_features needs to be divisible by matmul_parallel_size"
@@ -188,7 +188,7 @@ class DistributedMLP(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp.pkl", "wb"))
             # try:   print("DistributedMLP x:",x.detach().cpu().numpy())
             # except:print("DistributedMLP x:",x)
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if self.input_is_matmul_parallel:
                 x = gather_from_parallel_region(
                     x, dim=1, shapes=self.gather_shapes
@@ -229,7 +229,7 @@ class DistributedMLP(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_mlp_conv2d2.pkl", "wb"))
             # try:    print("DistributedMLP conf2d:",x.detach().cpu().numpy())
             # except: print("DistributedMLP conf2d:",x)
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             x = reduce_from_parallel_region(x)
             if REPLICATE:
                 dumps +=1
@@ -250,7 +250,7 @@ class DistributedMLP(nn.Module):
             # except: print("DistributedMLP drop:",x)
 
         # scatter if output is MP
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if self.output_is_matmul_parallel:
                 x = scatter_to_parallel_region(x, dim=1)
                 if REPLICATE:
@@ -288,7 +288,7 @@ class DistributedPatchEmbed(nn.Module):
         self.output_parallel = output_is_matmul_parallel
 
         # get comm sizes:
-        matmul_comm_size = comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
+        matmul_comm_size = 1#!!comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
 
         # compute parameters
         # print("inp_shape", inp_shape.detach().cpu().numpy())
@@ -340,7 +340,7 @@ class DistributedPatchEmbed(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_patch_embed_Input.pkl", "wb"))
             # try:    print("DistributedPatchEmbed x:",x.detach().cpu().numpy())
             # except: print("DistributedPatchEmbed x:",x)
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if self.input_parallel:
                 x = gather_from_parallel_region(
                     x, dim=1, shapes=self.in_shapes
@@ -434,7 +434,7 @@ class DistributedAFNO2D(nn.Module):
             )
         self.comm = comm
         # get comm sizes:
-        matmul_comm_size = comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
+        matmul_comm_size = 1#!!comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
         self.matmul_comm_size = matmul_comm_size
         self.fft_handle = torch.fft.rfft2
         self.ifft_handle = torch.fft.irfft2
@@ -507,7 +507,7 @@ class DistributedAFNO2D(nn.Module):
             pickle.dump(x, open(f"{debugpath}/{dumps:03d}_mpi_distributed_afno2d_Input.pkl", "wb"))
             # try:    print("DistributedAFNO2D x:",x.detach().cpu().numpy())
             # except: print("DistributedAFNO2D x:",x)
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if not self.input_is_matmul_parallel:
                 # distribute data
                 num_chans = x.shape[1]
@@ -600,7 +600,7 @@ class DistributedAFNO2D(nn.Module):
             # except: print("DistributedAFNO2D x after type:",x)
 
         # gather
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if not self.output_is_matmul_parallel:
                 gather_shapes = compute_split_shapes(
                     num_chans, self.matmul_comm_size
@@ -648,7 +648,7 @@ class DistributedBlock(nn.Module):
         super(DistributedBlock, self).__init__()
 
         # model parallelism
-        self.world_size=comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
+        self.world_size=1#!!comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
         # matmul parallelism
         self.input_is_matmul_parallel = input_is_matmul_parallel
         self.output_is_matmul_parallel = output_is_matmul_parallel
@@ -791,8 +791,8 @@ class DistributedAFNONet(nn.Module):
             torch.manual_seed(42)
         super().__init__()
         self.comm=comm
-        self.rank = comm.Get_rank() #if not dist.is_initialized() else dist.get_rank("model_parallel")
-        self.world_size = comm.Get_size() #if not dist.is_initialized() else dist.get_world_size("model_parallel")
+        self.rank = 0#!!comm.Get_rank() #if not dist.is_initialized() else dist.get_rank("model_parallel")
+        self.world_size = 1#!!comm.Get_size() #if not dist.is_initialized() else dist.get_world_size("model_parallel")
 
         # comm sizes
         matmul_comm_size = self.world_size
@@ -956,7 +956,7 @@ class DistributedAFNONet(nn.Module):
             # try:    print("DistributedAFNONet x after copy_to if outMatMul:",x.detach().cpu().numpy())
             # except: print("DistributedAFNONet x after copy_to if outMatMul:",x)
         # be careful if head is distributed
-        if self.comm.Get_size() > 1:
+        if False:#!!self.comm.Get_size() > 1:
             if self.output_is_matmul_parallel:
                 x = copy_to_parallel_region(x)
                 if REPLICATE:
@@ -1082,7 +1082,7 @@ class DistributedAFNOMPI(modulus.Module):
 
         
 
-        comm_size = comm.Get_size() #if not dist.is_initialized() else dist.get_world_size("model_parallel")
+        comm_size = 1#!!comm.Get_size() #if not dist.is_initialized() else dist.get_world_size("model_parallel")
         if channel_parallel_inputs:
             if not (in_channels % comm_size == 0):
                 raise ValueError(
