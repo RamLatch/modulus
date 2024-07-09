@@ -356,10 +356,10 @@ def all_gather_v_wrapper(
 
     # Determine local tensor size
     local_size = int(tensor.size(dim))
-    # local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
+    local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
 
-    local_sizes = np.empty(comm_size)
-    comm.Allgather(local_size,local_sizes)  # Gather sizes of tensors from all ranks
+    # local_sizes = np.empty(comm_size)
+    # comm.Allgather(local_size,local_sizes)  # Gather sizes of tensors from all ranks
 
     if sizes is None:
         temp_size = t_size.copy()
