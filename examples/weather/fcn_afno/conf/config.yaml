@@ -18,13 +18,13 @@ hydra:
   job:
     chdir: True
   run:
-    dir: /hkfs/work/workspace/scratch/ie5012-MA/results/080724/
+    dir: /hkfs/work/workspace/scratch/ie5012-MA/results/debug/mpiProblems/
 
 train_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/wip/train
 validation_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/wip/test
 stats_dir: /hkfs/work/workspace/scratch/ie5012-MA/data/stats
 
-ckpt_path: /hkfs/work/workspace/scratch/ie5012-MA/results/080724/checkpoints
+ckpt_path: /hkfs/work/workspace/scratch/ie5012-MA/results/debug/mpiProblems/checkpoints
 
 channels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
