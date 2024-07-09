@@ -357,24 +357,25 @@ def all_gather_v_wrapper(
     # Determine local tensor size
     local_size = int(tensor.size(dim))
     local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
-
+    total_size = sum(local_sizes)
     # local_sizes = np.empty(comm_size)
     # comm.Allgather(local_size,local_sizes)  # Gather sizes of tensors from all ranks
 
     if sizes is None:
-        temp_size = t_size.copy()
-        temp_size.pop(dim)
-        cum_prod = 1
-        for i in range(len(temp_size)):
-            cum_prod *= temp_size[i]
-        sizes = [s*cum_prod for s in local_sizes]
-    #    sizes = local_sizes
+        tmp_sizes = t_size.copy()
+        tmp_sizes.pop(dim)
+        cum_size = np.prod(tmp_sizes)
+        sizes = [l*cum_size for l in local_sizes]
+        print("sizes", sizes)
+    
+    t_size[dim] = total_size
+
 
     # Calculate total size for the receive buffer and displacements
     displacements = [sum(sizes[:i]) for i in range(comm_size)]
 
     # Prepare the receive buffer
-    recv_buf = np.empty(t_size, dtype=tensor.cpu().numpy().dtype)
+    recv_buf = np.empty(t_size, dtype=tensor.cpu().numpy().dtype).flatten()
 
     # Flatten the tensor for sending
     send_data = tensor.cpu().numpy().flatten()
