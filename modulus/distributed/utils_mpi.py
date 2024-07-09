@@ -215,8 +215,10 @@ def _reduce(input_, use_fp32=True):  # pragma: no cover
     dtype = input_.dtype
     device = input_.device
     tensor = input_.detach()
-    comm.Allreduce(MPI.IN_PLACE, tensor.cpu().numpy(), op=MPI.SUM)
-    tensor = torch.from_numpy(tensor).to(dtype=dtype, device=device).requires_grad_()
+    send_data = tensor.cpu().numpy()
+    recv_data = np.empty_like(send_data)
+    comm.Allreduce(send_data, recv_data, op=MPI.SUM)
+    tensor = torch.from_numpy(recv_data).to(dtype=dtype, device=device).requires_grad_()
     return tensor
     # All-reduce, use_fp32 only relevant for lower precisions
     # if input is already in double precision, nothing changes
