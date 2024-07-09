@@ -368,7 +368,7 @@ def all_gather_v_wrapper(
     send_data = tensor.cpu().numpy().flatten()
 
     # Perform Allgatherv operation
-    comm.Allgatherv(send_data, [recv_buf, sizes, displacements, MPI.DOUBLE])
+    comm.Allgatherv(send_data, (recv_buf, sizes, displacements, recv_buf.dtype))#MPI.DOUBLE))
 
     # Reconstruct the global tensor
     # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
