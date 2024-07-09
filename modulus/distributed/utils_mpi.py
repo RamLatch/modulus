@@ -217,7 +217,7 @@ def _reduce(input_:torch.Tensor, use_fp32=True):  # pragma: no cover
     tensor = input_.detach()
     send_data = tensor.cpu().numpy()
     recv_data = np.empty_like(send_data).flatten()
-    comm.Allreduce(send_data, recv_data, op=MPI.SUM)
+    comm.Allreduce(send_data, (recv_data,MPI.FLOAT), op=MPI.SUM)
     tensor = torch.from_numpy(recv_data).view(input_.shape).to(dtype=dtype, device=device).requires_grad_()
     return tensor
     # All-reduce, use_fp32 only relevant for lower precisions
