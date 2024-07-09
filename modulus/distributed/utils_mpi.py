@@ -362,10 +362,10 @@ def all_gather_v_wrapper(
     displacements = [sum(sizes[:i]) for i in range(comm_size)]
 
     # Prepare the receive buffer
-    recv_buf = np.empty(total_size, dtype=tensor.numpy().dtype)
+    recv_buf = np.empty(total_size, dtype=tensor.cpu().numpy().dtype)
 
     # Flatten the tensor for sending
-    send_data = tensor.numpy().flatten()
+    send_data = tensor.cpu().numpy().flatten()
 
     # Perform Allgatherv operation
     comm.Allgatherv(send_data, [recv_buf, sizes, displacements, MPI.DOUBLE])
@@ -448,9 +448,9 @@ def all_gather_v_bwd_wrapper(
 
     # Convert PyTorch tensor to NumPy
     if use_fp32:
-        tensor_np = tensor.numpy().astype(np.float32)
+        tensor_np = tensor.cpu().numpy().astype(np.float32)
     else:
-        tensor_np = tensor.numpy()
+        tensor_np = tensor.cpu().numpy()
 
     # Gather sizes from all ranks
     recv_sizes = np.zeros(comm_size, dtype=int)
@@ -467,7 +467,7 @@ def all_gather_v_bwd_wrapper(
     comm.Allgatherv(sendbuf=tensor_np, recvbuf=(recvbuf, recv_sizes, displs), root=0)
 
     # Convert back to PyTorch tensor and sum up the chunks
-    gathered_tensor = torch.from_numpy(recvbuf)
+    gathered_tensor = torch.from_numpy(recvbuf).to(tensor.device)
     output = torch.sum(gathered_tensor, dim=dim)
 
     return output
