@@ -355,11 +355,20 @@ def all_gather_v_wrapper(
     t_size = list(tensor.shape)
 
     # Determine local tensor size
-    local_size = tensor.size(dim)
-    local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
+    local_size = int(tensor.size(dim))
+    # local_sizes = comm.allgather(local_size)  # Gather sizes of tensors from all ranks
+
+    local_sizes = [None]*comm_size
+    comm.Allgather(local_size,local_sizes,MPI.INT)  # Gather sizes of tensors from all ranks
 
     if sizes is None:
-        sizes = local_sizes
+        temp_size = t_size.copy()
+        temp_size.pop(dim)
+        cum_prod = 1
+        for i in range(len(temp_size)):
+            cum_prod *= temp_size[i]
+        sizes = [s*cum_prod for s in local_sizes]
+    #    sizes = local_sizes
 
     # Calculate total size for the receive buffer and displacements
     displacements = [sum(sizes[:i]) for i in range(comm_size)]
