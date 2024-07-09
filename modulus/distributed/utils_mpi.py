@@ -351,6 +351,8 @@ def all_gather_v_wrapper(
         return tensor
     
     t_dtype = tensor.dtype
+    t_mem = get_memory_format(tensor)
+    t_size = list(tensor.shape)
 
     # Determine local tensor size
     local_size = tensor.size(dim)
@@ -374,8 +376,8 @@ def all_gather_v_wrapper(
 
     # Reconstruct the global tensor
     # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
-    global_tensor = torch.from_numpy(recv_buf).view(-1, *tensor.size()[1:]).to(tensor.device)
-    global_tensor=global_tensor.type(t_dtype)
+    global_tensor = torch.from_numpy(recv_buf).view(-1, t_size[1:]).to(tensor.device)
+    global_tensor=global_tensor.type(t_dtype).contiguous(memory_format=t_mem)
     return global_tensor
     # tensor_shape = list(tensor.shape)
     # tensor_format = get_memory_format(tensor)
