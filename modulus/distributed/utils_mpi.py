@@ -349,6 +349,8 @@ def all_gather_v_wrapper(
 
     if comm_size == 1:
         return tensor
+    
+    t_dtype = tensor.dtype
 
     # Determine local tensor size
     local_size = tensor.size(dim)
@@ -368,12 +370,12 @@ def all_gather_v_wrapper(
     send_data = tensor.cpu().numpy().flatten()
 
     # Perform Allgatherv operation
-    comm.Allgatherv(send_data, (recv_buf, sizes, displacements, recv_buf.dtype))#MPI.DOUBLE))
+    comm.Allgatherv(sendbuf=send_data, recvbuf=(recv_buf, sizes, displacements, MPI.FLOAT))#MPI.DOUBLE))
 
     # Reconstruct the global tensor
     # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
     global_tensor = torch.from_numpy(recv_buf).view(-1, *tensor.size()[1:]).to(tensor.device)
-    global_tensor=global_tensor.type(tensor.dtype)
+    global_tensor=global_tensor.type(t_dtype)
     return global_tensor
     # tensor_shape = list(tensor.shape)
     # tensor_format = get_memory_format(tensor)
