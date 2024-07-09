@@ -385,7 +385,8 @@ def all_gather_v_wrapper(
     recv_buf = np.empty(t_size, dtype=float).flatten()
 
     # Flatten the tensor for sending
-    send_data = tensor.cpu().numpy().flatten()
+    torch.cuda.synchronize()
+    send_data = tensor.detach().cpu().numpy().flatten()
 
     # Perform Allgatherv operation
     # print(tensor.shape)
@@ -394,7 +395,7 @@ def all_gather_v_wrapper(
 
     # Reconstruct the global tensor
     # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
-    global_tensor = torch.from_numpy(recv_buf).view(tuple(t_size)).to(tensor.device)
+    global_tensor = torch.from_numpy(recv_buf).view(tuple(t_size)).to(tensor.device).requires_grad_()
     global_tensor=global_tensor.type(t_dtype).contiguous(memory_format=t_mem)
     return global_tensor
     # tensor_shape = list(tensor.shape)
