@@ -382,7 +382,7 @@ def all_gather_v_wrapper(
     displacements = [sum(sizes[:i]) for i in range(comm_size)]
 
     # Prepare the receive buffer
-    recv_buf = np.empty(t_size, dtype=tensor.cpu().numpy().dtype).flatten()
+    recv_buf = np.empty(t_size, dtype=t_dtype).flatten()
 
     # Flatten the tensor for sending
     send_data = tensor.cpu().numpy().flatten()
