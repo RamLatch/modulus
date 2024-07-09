@@ -385,7 +385,7 @@ def all_gather_v_wrapper(
     recv_buf = np.empty(t_size, dtype=float).flatten()
 
     # Flatten the tensor for sending
-    torch.cuda.synchronize()
+    # torch.cuda.synchronize()
     send_data = tensor.detach().cpu().numpy().flatten()
 
     # Perform Allgatherv operation
