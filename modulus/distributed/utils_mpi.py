@@ -361,12 +361,12 @@ def all_gather_v_wrapper(
     # local_sizes = np.empty(comm_size)
     # comm.Allgather(local_size,local_sizes)  # Gather sizes of tensors from all ranks
 
-    if sizes is None:
-        tmp_sizes = t_size.copy()
-        tmp_sizes.pop(dim)
-        cum_size = np.prod(tmp_sizes)
-        sizes = [l*cum_size for l in local_sizes]
-        print("sizes", sizes)
+    #if sizes is None:
+    tmp_sizes = t_size.copy()
+    tmp_sizes.pop(dim)
+    cum_size = np.prod(tmp_sizes)
+    sizes = [l*cum_size for l in local_sizes]
+    print("sizes", sizes)
     
     t_size[dim] = total_size
 
