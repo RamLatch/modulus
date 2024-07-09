@@ -212,8 +212,12 @@ def _reduce(input_, use_fp32=True):  # pragma: no cover
     comm = MPI.COMM_WORLD
     if comm.Get_size() == 1:
         return input_
-    comm.Allreduce(MPI.IN_PLACE, input_, op=MPI.SUM)
-    return input_
+    dtype = input_.dtype
+    device = input_.device
+    tensor = input_.detach()
+    comm.Allreduce(MPI.IN_PLACE, tensor.cpu().numpy(), op=MPI.SUM)
+    tensor = torch.from_numpy(tensor).to(dtype=dtype, device=device).requires_grad_()
+    return tensor
     # All-reduce, use_fp32 only relevant for lower precisions
     # if input is already in double precision, nothing changes
     # if use_fp32 and (input_.dtype.itemsize < 4) and input_.dtype.is_floating_point:
