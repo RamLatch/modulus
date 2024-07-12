@@ -255,7 +255,7 @@ def main(cfg: DictConfig) -> None:
                 invar = data[0]["invar"]
                 #!!if j == 0: onnx_save_input = invar.detach().clone()
                 outvar = data[0]["outvar"]
-                loss = train_step_once(fcn_model,invar,outvar)#train_step_forward(fcn_model, invar, outvar)
+                loss = train_step_forward(fcn_model, invar, outvar)#train_step_once(fcn_model,invar,outvar)
                 print(f"Epoch {epoch}, Batch {j}, Loss {loss.item()}")
                 log.log_minibatch({"loss": loss.detach()})
             log.log_epoch({"Learning Rate": optimizer.param_groups[0]["lr"]})
