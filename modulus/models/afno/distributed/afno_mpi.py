@@ -482,6 +482,7 @@ class DistributedBlock(nn.Module):
 
         # model parallelism
         self.world_size=comm.Get_size() #if not dist.is_available() else dist.get_world_size("model_parallel")
+        self.rank = comm.Get_rank() #if not dist.is_initialized() else dist.get_rank("model_parallel")
         # matmul parallelism
         self.input_is_matmul_parallel = input_is_matmul_parallel
         self.output_is_matmul_parallel = output_is_matmul_parallel
@@ -525,11 +526,11 @@ class DistributedBlock(nn.Module):
             if not self.input_is_matmul_parallel:
                 
                 x = scatter_to_parallel_region(x, dim=1)
-        print("rank", self.comm.Get_rank(), " in block after possible scatter", x.shape)
+        print("rank", self.rank, " in block after possible scatter", x.shape)
         residual = x
         x = self.norm1(x)
         x = self.filter(x)
-        print("rank", self.comm.Get_rank(), " in block after filter", x.shape)
+        print("rank", self.rank, " in block after filter", x.shape)
 
         if self.double_skip:
             x = x + residual
@@ -537,7 +538,7 @@ class DistributedBlock(nn.Module):
 
         x = self.norm2(x)
         x = self.mlp(x)
-        print("rank", self.comm.Get_rank(), " in block after mlp", x.shape)
+        print("rank", self.rank, " in block after mlp", x.shape)
 
         x = self.drop_path(x)
         x = x + residual
