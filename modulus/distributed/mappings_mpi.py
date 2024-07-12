@@ -136,7 +136,7 @@ class ScatterFunction(torch.autograd.Function):
         output=comm.allgather(grad_output.clone().detach())
         #combine allgathered tensors
         output=torch.cat(output,ctx.dim_)
-        return output
+        return (output, None)
     
 class AllgatherVFunction(torch.autograd.Function):
     
