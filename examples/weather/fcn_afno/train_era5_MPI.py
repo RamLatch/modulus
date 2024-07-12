@@ -232,6 +232,8 @@ def main(cfg: DictConfig) -> None:
             outpred = my_model(invar)
             invar = outpred
             loss += loss_func(outpred, outvar[:, t])
+            print(t,loss.item())
+        print("backward")
         loss.backward()
         optimizer.step()
         return loss
