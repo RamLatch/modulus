@@ -15,6 +15,7 @@
 # limitations under the License.
 
 # TODO this also needs more docstrings
+import copy
 from typing import List, Optional
 
 
@@ -386,7 +387,8 @@ def all_gather_v_wrapper(
 
     # Flatten the tensor for sending
     # torch.cuda.synchronize()
-    send_data = tensor.detach().cpu().numpy().flatten()
+    sendtensor = copy.deepcopy(tensor)
+    send_data = sendtensor.detach().cpu().numpy().flatten()
 
     # Perform Allgatherv operation
     # print(tensor.shape)
