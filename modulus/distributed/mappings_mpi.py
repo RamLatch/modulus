@@ -215,5 +215,5 @@ def scatter_to_parallel_region(input, dim):  # pragma: no cover
 
 def gather_from_parallel_region(input, dim, shapes):  # pragma: no cover
     """Gather the input from matmul parallel region and concatenate."""
-    return AllgatherVFunction.apply(input, dim, shapes)
+    return AllgatherVFunction.apply(input, dim)
     return _GatherFromParallelRegion.apply(input, dim, shapes)
