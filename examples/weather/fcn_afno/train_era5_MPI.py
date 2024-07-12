@@ -224,6 +224,17 @@ def main(cfg: DictConfig) -> None:
             invar = outpred
             loss += loss_func(outpred, outvar[:, t])
         return loss
+    
+    def train_step_once(my_model, invar, outvar):
+        loss = 0
+        optimizer.zero_grad()
+        for t in range(outvar.shape[1]):
+            outpred = my_model(invar)
+            invar = outpred
+            loss += loss_func(outpred, outvar[:, t])
+        loss.backward()
+        optimizer.step()
+        return loss
 
     # Main training loop
     max_epoch = cfg.max_epoch
@@ -241,7 +252,7 @@ def main(cfg: DictConfig) -> None:
                 invar = data[0]["invar"]
                 #!!if j == 0: onnx_save_input = invar.detach().clone()
                 outvar = data[0]["outvar"]
-                loss = train_step_forward(fcn_model, invar, outvar)
+                loss = train_step_once(fcn_model,invar,outvar)#train_step_forward(fcn_model, invar, outvar)
 
                 log.log_minibatch({"loss": loss.detach()})
             log.log_epoch({"Learning Rate": optimizer.param_groups[0]["lr"]})
