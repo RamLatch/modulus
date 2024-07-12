@@ -93,7 +93,80 @@ class _ScatterToParallelRegion(torch.autograd.Function):
             None,
             None,
         )
+def split_tensor_along_dim(tensor, dim, num_chunks):
+    if num_chunks == 1:
+        return [tensor.shape[dim]]
+    chunk_size = (tensor.shape[dim] + num_chunks - 1) // num_chunks
+    last_chunk_size = max(0, tensor.shape[dim] - chunk_size * (num_chunks - 1))
+    if last_chunk_size == 0:
+        chunk_size = tensor.shape[dim] // num_chunks
+        last_chunk_size = tensor.shape[dim] - chunk_size * (num_chunks - 1)
 
+    # generate sections list
+    sections = [chunk_size for _ in range(num_chunks - 1)] + [last_chunk_size]
+    tensor_list = torch.split(tensor, sections, dim=dim)
+    return tensor_list
+
+#an torch autograd function that handles forward and backward pass For MPI Scatter
+class ScatterFunction(torch.autograd.Function):
+    @staticmethod
+    def symbolic(g, input):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        return g.op("Scatter", input, rank=rank, size=comm_size)
+    @staticmethod
+    def forward(ctx: torch.autograd.function._ContextMethodMixin, input: torch.Tensor, dim_):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        ctx.save_for_backward(input)
+        ctx.dim = dim_
+        input_format= torch.channels_last   if input.is_contiguous(memory_format=torch.channels_last) else torch.contiguous_format
+        output=comm.scatter(split_tensor_along_dim(input.clone().detach(), dim_, comm_size))
+        output = output.contiguous(memory_format=input_format)
+        return output
+
+    @staticmethod
+    def backward(ctx: torch.autograd.function._ContextMethodMixin, grad_output):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        input, = ctx.saved_tensors
+        output=comm.allgather(grad_output.clone().detach())
+        #combine allgathered tensors
+        output=torch.cat(output,ctx.dim_)
+        return output
+    
+class AllgatherVFunction(torch.autograd.Function):
+    
+    @staticmethod
+    def symbolic(g, input):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        return g.op("AllgatherV", input, rank=rank, size=comm_size)
+    @staticmethod
+    def forward(ctx: torch.autograd.function._ContextMethodMixin, input: torch.Tensor, dim_):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        ctx.dim = dim_
+        ctx.save_for_backward(input)
+        
+        output=comm.allgather(input.clone().detach())
+        output=torch.cat(output,dim_)
+        return output
+
+    @staticmethod
+    def backward(ctx: torch.autograd.function._ContextMethodMixin, grad_output):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        comm_size = comm.Get_size()
+        grad_format= torch.channels_last   if grad_output.is_contiguous(memory_format=torch.channels_last) else torch.contiguous_format
+        output=comm.scatter(split_tensor_along_dim(grad_output, ctx.dim, comm_size))
+        output = output.contiguous(memory_format=grad_format)
+        return (output, None)
 
 class _GatherFromParallelRegion(torch.autograd.Function):
     """Gather the input from parallel region and concatenate."""
@@ -136,9 +209,11 @@ def reduce_from_parallel_region(input):  # pragma: no cover
 
 def scatter_to_parallel_region(input, dim):  # pragma: no cover
     """Split the input and keep only the corresponding chuck to the rank."""
+    return ScatterFunction.apply(input, dim)
     return _ScatterToParallelRegion.apply(input, dim)
 
 
 def gather_from_parallel_region(input, dim, shapes):  # pragma: no cover
     """Gather the input from matmul parallel region and concatenate."""
+    return AllgatherVFunction.apply(input, dim, shapes)
     return _GatherFromParallelRegion.apply(input, dim, shapes)
