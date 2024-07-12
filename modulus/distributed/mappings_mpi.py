@@ -121,7 +121,7 @@ class ScatterFunction(torch.autograd.Function):
         rank = comm.Get_rank()
         comm_size = comm.Get_size()
         ctx.save_for_backward(input)
-        ctx.dim = dim_
+        ctx.dim_ = dim_
         input_format= torch.channels_last   if input.is_contiguous(memory_format=torch.channels_last) else torch.contiguous_format
         output=comm.scatter(split_tensor_along_dim(input.clone().detach(), dim_, comm_size))
         output = output.contiguous(memory_format=input_format)
