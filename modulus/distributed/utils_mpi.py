@@ -387,7 +387,7 @@ def all_gather_v_wrapper(
 
     # Flatten the tensor for sending
     # torch.cuda.synchronize()
-    sendtensor = copy.deepcopy(tensor)
+    sendtensor = tensor.clone()
     send_data = sendtensor.detach().cpu().numpy().flatten()
 
     # Perform Allgatherv operation
