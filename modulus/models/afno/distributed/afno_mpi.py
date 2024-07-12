@@ -525,10 +525,11 @@ class DistributedBlock(nn.Module):
             if not self.input_is_matmul_parallel:
                 
                 x = scatter_to_parallel_region(x, dim=1)
-
+        print("rank", self.comm.Get_rank(), " in block after possible scatter", x.shape)
         residual = x
         x = self.norm1(x)
         x = self.filter(x)
+        print("rank", self.comm.Get_rank(), " in block after filter", x.shape)
 
         if self.double_skip:
             x = x + residual
@@ -536,6 +537,8 @@ class DistributedBlock(nn.Module):
 
         x = self.norm2(x)
         x = self.mlp(x)
+        print("rank", self.comm.Get_rank(), " in block after mlp", x.shape)
+
         x = self.drop_path(x)
         x = x + residual
         
@@ -682,7 +685,7 @@ class DistributedAFNONet(nn.Module):
 
         # reshape
         x = x.reshape(B, self.embed_dim_local, self.h, self.w)
-
+        print("rank", self.rank, "before blocks", x.shape)
         for blk in self.blocks:
             x = blk(x)
         return x
