@@ -215,7 +215,7 @@ def main(cfg: DictConfig) -> None:
     def eval_step_forward(my_model, invar):
         return my_model(invar)
 
-    @StaticCaptureTraining(model=fcn_model, optim=optimizer, logger=logger)
+    @StaticCaptureTraining(model=fcn_model, optim=optimizer, logger=logger, use_graphs=False)
     def train_step_forward(my_model, invar, outvar):
         # Multi-step prediction
         loss = 0
@@ -230,10 +230,10 @@ def main(cfg: DictConfig) -> None:
         optimizer.zero_grad()
         for t in range(outvar.shape[1]):
             outpred = my_model(invar)
-            print(outpred)
+            # print(outpred)
             invar = outpred
             loss += loss_func(outpred, outvar[:, t])
-            print(t,loss.item())
+            # print(t,loss.item())
         #print("backward")
         #loss.backward()
         #optimizer.step()
@@ -256,7 +256,7 @@ def main(cfg: DictConfig) -> None:
                 #!!if j == 0: onnx_save_input = invar.detach().clone()
                 outvar = data[0]["outvar"]
                 loss = train_step_once(fcn_model,invar,outvar)#train_step_forward(fcn_model, invar, outvar)
-
+                print(f"Epoch {epoch}, Batch {j}, Loss {loss.item()}")
                 log.log_minibatch({"loss": loss.detach()})
             log.log_epoch({"Learning Rate": optimizer.param_groups[0]["lr"]})
 
