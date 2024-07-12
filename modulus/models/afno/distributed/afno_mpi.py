@@ -174,6 +174,7 @@ class DistributedMLP(nn.Module):
         if self.comm.Get_size() > 1:
             if self.input_is_matmul_parallel:
                 print("rank", self.comm.Get_rank(), " in mlp before possible gather", x.shape)
+                self.comm.Barrier()
                 x = gather_from_parallel_region(
                     x, dim=1, shapes=self.gather_shapes
                 )
