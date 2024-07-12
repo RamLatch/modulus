@@ -819,4 +819,5 @@ class DistributedAFNOMPI(modulus.Module):
         # logger.info("DistributedAFNOMPI initialized")
 
     def forward(self, in_vars: Tensor) -> Tensor:
+        print("hey from rank", self.comm.Get_rank())
         return self._impl(in_vars)
