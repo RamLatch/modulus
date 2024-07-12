@@ -230,12 +230,13 @@ def main(cfg: DictConfig) -> None:
         optimizer.zero_grad()
         for t in range(outvar.shape[1]):
             outpred = my_model(invar)
+            print(outpred)
             invar = outpred
             loss += loss_func(outpred, outvar[:, t])
             print(t,loss.item())
-        print("backward")
-        loss.backward()
-        optimizer.step()
+        #print("backward")
+        #loss.backward()
+        #optimizer.step()
         return loss
 
     # Main training loop
