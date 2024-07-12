@@ -176,14 +176,18 @@ class DistributedMLP(nn.Module):
                 x = gather_from_parallel_region(
                     x, dim=1, shapes=self.gather_shapes
                 )
+            print("rank", self.comm.Get_rank(), " in mlp after possible gather", x.shape)
 
             x = copy_to_parallel_region(x)
+            print("rank", self.comm.Get_rank(), " in mlp after copy", x.shape)
         x = F.conv2d(x, self.w1, bias=self.b1)
         x = self.act(x)
         x = self.drop(x)
         x = F.conv2d(x, self.w2, bias=None)
         if self.comm.Get_size() > 1:
+            print("rank", self.comm.Get_rank(), " in mlp before possible reduce", x.shape)
             x = reduce_from_parallel_region(x)
+            print("rank", self.comm.Get_rank(), " in mlp after possible reduce", x.shape)
         x = x + torch.reshape(self.b2, (1, -1, 1, 1))
         x = self.drop(x)
 
@@ -191,6 +195,7 @@ class DistributedMLP(nn.Module):
         if self.comm.Get_size() > 1:
             if self.output_is_matmul_parallel:
                 x = scatter_to_parallel_region(x, dim=1)
+                print("rank", self.comm.Get_rank(), " in mlp after possible scatter", x.shape)
         return x
 
 
@@ -537,6 +542,8 @@ class DistributedBlock(nn.Module):
             residual = x
 
         x = self.norm2(x)
+        print("rank", self.rank, " in block after norm2", x.shape)
+
         x = self.mlp(x)
         print("rank", self.rank, " in block after mlp", x.shape)
 
