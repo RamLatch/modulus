@@ -153,8 +153,9 @@ class AllgatherVFunction(torch.autograd.Function):
         comm_size = comm.Get_size()
         ctx.dim = dim_
         ctx.save_for_backward(input)
-        
+        if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
         output=comm.allgather(input.clone().detach())
+        if comm_size > 4 and rank == 0: print(f"allgatherv: {output.shape}")
         output=torch.cat(output,dim_)
         return output
 
