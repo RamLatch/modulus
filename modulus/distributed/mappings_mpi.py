@@ -158,7 +158,7 @@ class AllgatherVFunction(torch.autograd.Function):
         if rank == 0:
             comm.send(input[0][0], dest=1)
         elif rank == 1:
-            test_tensor = torch.zeros_like(input[0][0].shape)
+            test_tensor = torch.zeros(input[0][0].shape)
             comm.recv(test_tensor, source=0)
             print(f"testing: {test_tensor.shape}")
 
