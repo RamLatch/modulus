@@ -16,6 +16,7 @@
 
 # TODO this also needs more docstrings
 import copy
+from ctypes import sizeof
 from typing import List, Optional
 
 
@@ -425,6 +426,79 @@ def all_gather_v_wrapper(
 
     # return output
 
+def all_gather_v_wrapper_mpi4(
+    tensor: torch.Tensor,
+    sizes: Optional[List[int]] = None,
+    dim: int = 0
+) -> torch.Tensor:  # pragma: no cover
+    """
+    Implements a distributed AllGatherV primitive. It is based
+    on the idea of a single global tensor which is distributed along
+    a specified dimension into chunks of variable size.
+    This primitive gathers all local tensors from each rank into the
+    full global tensor onto each rank.
+
+    Parameters
+    ----------
+    tensor : "torch.Tensor"
+        local tensor on each rank
+    sizes : List[int], optional
+        list of the sizes of each chunk on each rank along distributed dimension,
+        valid and set on each rank, by default None
+    dim : int, optional
+        dimension along which global tensor is distributed, by default 0
+    group : Optional[dist.ProcessGroup], optional
+        process group along which global tensor is shared, by default None
+
+    Returns
+    -------
+    torch.Tensor
+        full global tensor, valid on each rank
+    """
+    comm = MPI.COMM_WORLD
+    comm_size = comm.Get_size()
+
+    if (sizes is not None) and (len(sizes) != comm_size):
+        raise ValueError()
+    if dim >= tensor.dim():
+        raise ValueError()
+
+    if comm_size == 1:
+        return tensor
+    
+    t_dtype = tensor.dtype
+    t_mem = get_memory_format(tensor)
+    t_size = list(tensor.shape)
+
+    # Determine local tensor size
+    tensor_shape = list(tensor.shape)
+    local_size = 0
+    for i in range(len(tensor_shape)):
+        local_size += tensor_shape[i]
+    local_sizes = [0] * comm_size
+    comm.Allgather(local_size,local_sizes)  # Gather sizes of tensors from all ranks
+    total_size = sum(local_sizes)
+
+    # Calculate total size for the receive buffer and displacements
+    displacements = [sum(local_sizes[:i]) for i in range(comm_size)]
+
+    # Prepare the receive buffer
+    #turn tensor to mpi4py 4.0.0.dev0 buffer
+    send_data = MPI.memory.fromaddress(tensor.data_ptr(), tensor.numel()*sizeof(tensor.dtype))
+    recv_buf = MPI.memory.fromaddress(tensor.clone().data_ptr(), total_size*sizeof(tensor.dtype))
+
+
+
+    # Perform Allgatherv operation
+    # print(tensor.shape)
+    # print("send_data", send_data, "rank", comm.Get_rank(), "sizes", sizes, "displacements", displacements, "dtype", MPI.FLOAT)
+    comm.Allgatherv(sendbuf=send_data, recvbuf=(recv_buf, local_sizes, displacements, MPI.FLOAT))#MPI.DOUBLE))
+
+    # Reconstruct the global tensor
+    # Assuming the tensor is 1D for simplicity. Adjust for actual dimensions.
+    global_tensor = torch.from_numpy(recv_buf).view(tuple(t_size)).to(tensor.device).requires_grad_()
+    global_tensor=global_tensor.type(t_dtype).contiguous(memory_format=t_mem)
+    return global_tensor
 
 def all_gather_v_bwd_wrapper(
     tensor: torch.Tensor,
