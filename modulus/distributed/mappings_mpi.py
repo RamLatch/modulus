@@ -168,7 +168,7 @@ class AllgatherVFunction(torch.autograd.Function):
         #     print(f"testing result {rank}: {test_tensor.shape}")
 
         if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
-        output=comm.allgather(input.clone().detach())
+        output=comm.allgather(input)#.clone().detach())
         if comm_size > 4 and rank == 0: print(f"allgatherv: {output.shape}")
         output=torch.cat(output,dim_)
         return output
