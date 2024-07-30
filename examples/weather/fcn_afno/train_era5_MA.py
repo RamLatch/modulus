@@ -117,10 +117,10 @@ def main(cfg: DictConfig) -> None:
     # )
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
-    from modulus.distributed.comm import init
+    from modulus.distributed.comm import init, get_world_rank, get_world_size, dist
     init("nccl-slurm")
-    rank = comm.Get_rank()
-    world_size = comm.Get_size()
+    rank = get_world_rank()
+    world_size = get_world_size()
 
     datapipe = ERA5HDF5Datapipe(
         data_dir=to_absolute_path(cfg.train_dir),
@@ -131,7 +131,7 @@ def main(cfg: DictConfig) -> None:
         batch_size=cfg.batch_size_train,
         patch_size=(8, 8),
         num_workers=cfg.num_workers_train,
-        device=torch.device("cuda"),
+        device=torch.device(f"cuda:{rank % torch.cuda.device_count()}" if torch.cuda.is_available() else "cpu"),
         process_rank=rank,
         world_size=world_size,
     )
@@ -146,7 +146,7 @@ def main(cfg: DictConfig) -> None:
             num_samples_per_year=cfg.num_samples_per_year_validation,
             batch_size=cfg.batch_size_validation,
             patch_size=(8, 8),
-            device=torch.device("cuda"),
+            device=torch.device(f"cuda:{rank % torch.cuda.device_count()}" if torch.cuda.is_available() else "cpu"),
             num_workers=cfg.num_workers_validation,
             shuffle=False,
         )
@@ -160,7 +160,7 @@ def main(cfg: DictConfig) -> None:
         embed_dim=768,
         depth=12,
         num_blocks=8,
-    ).to(torch.device("cuda"))
+    ).to(torch.device(f"cuda:{rank % torch.cuda.device_count()}" if torch.cuda.is_available() else "cpu"))
 
     if rank == 0 and wandb.run is not None:
         wandb.watch(
@@ -173,7 +173,7 @@ def main(cfg: DictConfig) -> None:
             fcn_model = DistributedDataParallel(
                 fcn_model,
                 device_ids=[rank],
-                output_device=torch.device("cuda"),
+                output_device=torch.device(f"cuda:{rank % torch.cuda.device_count()}" if torch.cuda.is_available() else "cpu"),
             )
         torch.cuda.current_stream().wait_stream(ddps)
 
