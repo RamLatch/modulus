@@ -155,71 +155,41 @@ class AllgatherVFunction(torch.autograd.Function):
         ctx.save_for_backward(input)
         comm.barrier()
         print(f"testing {rank}: {input.shape}")
-        print("comm between 4,5,6,7")
-        if rank == 4:
-            comm.send(input,dest=5)
-            comm.send(input,dest=6)
-            comm.send(input,dest=7)
-        elif rank == 5:
-            input = comm.recv(source=4)
-            print(f"here rank {rank} recieved from 4")
-        elif rank == 6:
-            input = comm.recv(source=4)
-            print(f"here rank {rank} recieved from 4")
-        elif rank == 7:
-            input = comm.recv(source=4)
-            print(f"here rank {rank} recieved from 4")
-            
-        comm.barrier()
-        if rank == 6:
-            input = comm.recv(source=5)
-            print(f"here rank {rank} recieved from 5")
-        elif rank == 5:
-            comm.send(input,dest=6)
-        comm.barrier()
-        if rank == 7:
-            input = comm.recv(source=5)
-            print(f"here rank {rank} recieved from 5")
-        elif rank == 5:
-            comm.send(input,dest=7)
-        comm.barrier()
-        if rank == 6:
-            input = comm.recv(source=7)
-            print(f"here rank {rank} recieved from 7")
-        elif rank == 7:
-            comm.send(input,dest=6)
+        
+        if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
         comm.barrier()
         if rank == 0:
             input1 = comm.recv(source=1)
             input2 = comm.recv(source=2)
             input3 = comm.recv(source=3)
-            input4 = comm.recv(source=4)
+            
+        elif rank < 4:
+            comm.send(input,dest=0)
+            print(f"testing result {rank} send")
+        elif rank == 4:
             input5 = comm.recv(source=5)
             input6 = comm.recv(source=6)
             input7 = comm.recv(source=7)
-        elif rank != 0:
-            comm.send(input,dest=0)
+        elif rank < 8:
+            comm.send(input,dest=4)
             print(f"testing result {rank} send")
         comm.barrier()
-        if input1:
-            print(f"input1: {input1.shape}")
-        if input2:
-            print(f"input2: {input2.shape}")
-        if input3:
-            print(f"input3: {input3.shape}")
-        if input4:
-            print(f"input4: {input4.shape}")
-        if input5:
-            print(f"input5: {input5.shape}")
-        if input6:
-            print(f"input6: {input6.shape}")
-        if input7:
-            print(f"input7: {input7.shape}")
+        if rank == 0:
+            input_list = [input, input1, input2, input3]
+            recv_list = comm.recv(source=4)
+        elif rank == 4:
+            input_list = [input, input5, input6, input7]
+            comm.send(input_list,dest=0)
+        comm.barrier()
+        if rank == 0:
+            input_list.extend(recv_list)
+        else:
+            input_list = torch.empty(input.shape, dtype=input.dtype)
+        output=torch.cat(input_list,dim_)
+        if comm_size > 4 and rank == 0: print(f"allgatherv output: {output.shape}")
         
-        if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
-        output=comm.allgather(input)#.clone().detach())
-        if comm_size > 4 and rank == 0: print(f"allgatherv: {output.shape}")
-        output=torch.cat(output,dim_)
+        #output=comm.allgather(input)#.clone().detach())
+        #output=torch.cat(output,dim_)
         return output
 
     @staticmethod
