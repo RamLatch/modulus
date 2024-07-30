@@ -184,7 +184,7 @@ class AllgatherVFunction(torch.autograd.Function):
         if rank == 0:
             input_list.extend(recv_list)
         else:
-            input_list = torch.empty(input.shape, dtype=input.dtype)
+            input_list = [torch.empty(input.shape, dtype=input.dtype)]*comm.Get_size()
         output=torch.cat(input_list,dim_)
         if comm_size > 4 and rank == 0: print(f"allgatherv output: {output.shape}")
         
