@@ -154,43 +154,43 @@ class AllgatherVFunction(torch.autograd.Function):
         ctx.dim = dim_
         ctx.save_for_backward(input)
         comm.barrier()
-        print(f"testing {rank}: {input.shape}")
+        # print(f"testing {rank}: {input.shape}")
         
-        if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
-        comm.barrier()
-        if rank == 0:
-            input1 = comm.recv(source=1)
-            input2 = comm.recv(source=2)
-            input3 = comm.recv(source=3)
+        # if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
+        # comm.barrier()
+        # if rank == 0:
+        #     input1 = comm.recv(source=1)
+        #     input2 = comm.recv(source=2)
+        #     input3 = comm.recv(source=3)
             
-        elif rank < 4:
-            comm.send(input,dest=0)
-            print(f"testing result {rank} send")
-        elif rank == 4:
-            input5 = comm.recv(source=5)
-            input6 = comm.recv(source=6)
-            input7 = comm.recv(source=7)
-        elif rank < 8:
-            comm.send(input,dest=4)
-            print(f"testing result {rank} send")
-        comm.barrier()
-        if rank == 0:
-            input_list = [input, input1, input2, input3]
-            recv_list = comm.recv(source=4)
-        elif rank == 4:
-            input_list = [input, input5, input6, input7]
-            comm.send(input_list,dest=0)
-        comm.barrier()
-        if rank == 0:
-            input_list.extend(recv_list)
-        else:
-            input_list = [torch.empty(input.shape, dtype=input.dtype)]*comm.Get_size()
-        output=torch.cat(input_list,dim_)
-        if comm_size > 4 and rank == 0: print(f"allgatherv output: {output.shape}")
-        #set correct dtype
-        output = output.type(input.dtype)
-        #output=comm.allgather(input)#.clone().detach())
-        #output=torch.cat(output,dim_)
+        # elif rank < 4:
+        #     comm.send(input,dest=0)
+        #     print(f"testing result {rank} send")
+        # elif rank == 4:
+        #     input5 = comm.recv(source=5)
+        #     input6 = comm.recv(source=6)
+        #     input7 = comm.recv(source=7)
+        # elif rank < 8:
+        #     comm.send(input,dest=4)
+        #     print(f"testing result {rank} send")
+        # comm.barrier()
+        # if rank == 0:
+        #     input_list = [input, input1, input2, input3]
+        #     recv_list = comm.recv(source=4)
+        # elif rank == 4:
+        #     input_list = [input, input5, input6, input7]
+        #     comm.send(input_list,dest=0)
+        # comm.barrier()
+        # if rank == 0:
+        #     input_list.extend(recv_list)
+        # else:
+        #     input_list = [torch.empty(input.shape, dtype=input.dtype)]*comm.Get_size()
+        # output=torch.cat(input_list,dim_)
+        # if comm_size > 4 and rank == 0: print(f"allgatherv output: {output.shape}")
+        # #set correct dtype
+        # output = output.type(input.dtype)
+        output=comm.allgather(input)#.clone().detach())
+        output=torch.cat(output,dim_)
         return output
 
     @staticmethod
