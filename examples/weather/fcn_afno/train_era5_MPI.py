@@ -180,7 +180,8 @@ def main(cfg: DictConfig) -> None:
         embed_dim=768,
         depth=12,
         num_blocks=8,
-        comm=comm or None
+        world_size = world_size,
+        rank = rank,
     ).to(torch.device("cuda" if torch.cuda.is_available() else 'cpu'))
     if rank == 0 and wandb.run is not None:
         wandb.watch(

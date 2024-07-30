@@ -154,6 +154,11 @@ class AllgatherVFunction(torch.autograd.Function):
         ctx.dim = dim_
         ctx.save_for_backward(input)
         comm.barrier()
+        test_tensor = torch.ones([50,1900,29,39])
+        print(f"testing: {test_tensor.shape}")
+        output=comm.allgather(test_tensor.clone().detach())
+        print(f"testing_output: {output.shape}")
+
         if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
         output=comm.allgather(input.clone().detach())
         if comm_size > 4 and rank == 0: print(f"allgatherv: {output.shape}")
