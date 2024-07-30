@@ -154,7 +154,41 @@ class AllgatherVFunction(torch.autograd.Function):
         ctx.dim = dim_
         ctx.save_for_backward(input)
         comm.barrier()
-        print(f"testing: {input.shape}")
+        print(f"testing {rank}: {input.shape}")
+        print("comm between 4,5,6,7")
+        if rank == 4:
+            comm.send(input,dest=5)
+            comm.send(input,dest=6)
+            comm.send(input,dest=7)
+        elif rank == 5:
+            input = comm.recv(source=4)
+            print(f"here rank {rank} recieved from 4")
+        elif rank == 6:
+            input = comm.recv(source=4)
+            print(f"here rank {rank} recieved from 4")
+        elif rank == 7:
+            input = comm.recv(source=4)
+            print(f"here rank {rank} recieved from 4")
+            
+        comm.barrier()
+        if rank == 6:
+            input = comm.recv(source=5)
+            print(f"here rank {rank} recieved from 5")
+        elif rank == 5:
+            comm.send(input,dest=6)
+        comm.barrier()
+        if rank == 7:
+            input = comm.recv(source=5)
+            print(f"here rank {rank} recieved from 5")
+        elif rank == 5:
+            comm.send(input,dest=7)
+        comm.barrier()
+        if rank == 6:
+            input = comm.recv(source=7)
+            print(f"here rank {rank} recieved from 7")
+        elif rank == 7:
+            comm.send(input,dest=6)
+        comm.barrier()
         if rank == 0:
             input1 = comm.recv(source=1)
             input2 = comm.recv(source=2)
