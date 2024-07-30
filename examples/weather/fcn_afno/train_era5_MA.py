@@ -44,7 +44,6 @@ from modulus.utils import StaticCaptureTraining, StaticCaptureEvaluateNoGrad
 from modulus.launch.logging import LaunchLogger, PythonLogger, initialize_mlflow
 from modulus.launch.utils import load_checkpoint, save_checkpoint
 
-comm = MPI.COMM_WORLD
 
 def loss_func(x, y, p=2.0):
     yv = y.reshape(x.size()[0], -1)
@@ -232,7 +231,7 @@ def main(cfg: DictConfig) -> None:
                 log.log_epoch({"Validation error": error})
 
         if world_size > 1:
-            comm.barrier()
+            dist.barrier()
 
         scheduler.step()
 
