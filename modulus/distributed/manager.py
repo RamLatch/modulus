@@ -376,8 +376,16 @@ class DistributedManager(object):
         method="env",
     ):
         """Set up PyTorch distributed process group and update manager attributes"""
-        #os.environ["MASTER_ADDR"] = addr
-        #os.environ["MASTER_PORT"] = str(port)
+        # added by Robin Maurer
+        from mpi4py import MPI
+        import socket
+        mpi_comm = MPI.COMM_WORLD
+        port = 29500
+        master_address = socket.gethostname()
+        master_address = mpi_comm.bcast(master_address, root=0)
+        # Above added by Robin Maurer
+        os.environ["MASTER_ADDR"] = master_address
+        os.environ["MASTER_PORT"] = str(port)
 
         DistributedManager._shared_state["_is_initialized"] = True
         manager = DistributedManager()

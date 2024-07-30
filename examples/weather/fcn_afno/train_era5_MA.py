@@ -117,7 +117,7 @@ def main(cfg: DictConfig) -> None:
     LaunchLogger.initialize(use_mlflow=cfg.use_mlflow)  # Modulus launch logger
     logger = PythonLogger("main")  # General python logger
     from modulus.distributed.comm import init, get_world_rank, get_world_size, dist
-    init("nccl-slurm")
+    group = init("nccl-slurm")
     rank = get_world_rank()
     world_size = get_world_size()
 
