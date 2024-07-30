@@ -153,6 +153,7 @@ class AllgatherVFunction(torch.autograd.Function):
         comm_size = comm.Get_size()
         ctx.dim = dim_
         ctx.save_for_backward(input)
+        comm.barrier()
         if comm_size > 4 and rank == 0: print(f"allgatherv: {input.shape}")
         output=comm.allgather(input.clone().detach())
         if comm_size > 4 and rank == 0: print(f"allgatherv: {output.shape}")
@@ -165,6 +166,7 @@ class AllgatherVFunction(torch.autograd.Function):
         rank = comm.Get_rank()
         comm_size = comm.Get_size()
         grad_format= torch.channels_last   if grad_output.is_contiguous(memory_format=torch.channels_last) else torch.contiguous_format
+        comm.barrier()
         output=comm.scatter(split_tensor_along_dim(grad_output, ctx.dim, comm_size))
         output = output.contiguous(memory_format=grad_format)
         return (output, None)
