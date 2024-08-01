@@ -254,8 +254,8 @@ class DistributedPatchEmbed(nn.Module):
                 f.write("matmul_comm_size "+str(matmul_comm_size))
         else:
             out_chans_local = embed_dim
-        with open(f"{debugpath}/embed_dim", "a") as f:
-            f.write("embed_dim "+str(out_chans_local))
+        # with open(f"{debugpath}/embed_dim", "a") as f:
+        #     f.write("embed_dim "+str(out_chans_local))
         # the weights  of this layer is shared across spatial parallel ranks
         self.proj = nn.Conv2d(
                 in_chans, out_chans_local, kernel_size=patch_size, stride=patch_size
