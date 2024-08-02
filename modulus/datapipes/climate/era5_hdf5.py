@@ -289,7 +289,7 @@ class ERA5HDF5Datapipe(Datapipe):
             if self.num_samples_per_year > data_samples_per_year:
                 raise ValueError(
                     f"num_samples_per_year ({self.num_samples_per_year}) > number of \
-                    samples available ({data_samples_per_year})!"
+                    samples available ({data_samples_per_year}) in {self.data_paths[0]}!"
                 )
 
             self.logger.info(f"Number of samples/year: {self.num_samples_per_year}")
