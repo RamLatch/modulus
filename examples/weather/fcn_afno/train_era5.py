@@ -218,6 +218,9 @@ def main(cfg: DictConfig) -> None:
                 log.log_minibatch({"loss": loss.detach()})
             log.log_epoch({"Learning Rate": optimizer.param_groups[0]["lr"]})
 
+        if dist.world_size > 1:
+            torch.distributed.barrier()
+
         if dist.rank == 0:
             # Wrap validation in launch logger for console / WandB logs
             with LaunchLogger("valid", epoch=epoch) as log:
@@ -241,6 +244,9 @@ def main(cfg: DictConfig) -> None:
                 scheduler=scheduler,
                 epoch=epoch,
             )
+        
+        if dist.world_size > 1:
+            torch.distributed.barrier()
 
     if dist.rank == 0:
         logger.info("Finished training!")
