@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import os
 import queue
 from typing import Optional
@@ -412,6 +413,7 @@ class DistributedManager(object):
                     rank=manager.rank,
                     world_size=manager.world_size,
                     device_id=manager.device,
+                    timeout=datetime.timedelta(seconds=5400) # added by Robin Maurer
                 )
             except TypeError:
                 # device_id only introduced in PyTorch 2.3
@@ -419,6 +421,7 @@ class DistributedManager(object):
                     backend,
                     rank=manager.rank,
                     world_size=manager.world_size,
+                    timeout=datetime.timedelta(seconds=5400) # added by Robin Maurer
                 )
 
         if torch.cuda.is_available():
